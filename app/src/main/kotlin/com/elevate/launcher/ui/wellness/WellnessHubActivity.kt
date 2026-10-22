@@ -27,4 +27,10 @@ class WellnessHubActivity : AppCompatActivity() {
             tab.text = titles[position]
         }.attach()
     }
+
+    /** Mirrors the slide-in transition used to open this screen, for a consistent "page" feel. */
+    override fun onBackPressed() {
+        super.onBackPressed()
+        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
+    }
 }

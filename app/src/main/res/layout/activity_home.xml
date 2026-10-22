@@ -109,6 +109,19 @@
         </androidx.cardview.widget.CardView>
     </LinearLayout>
 
+    <TextView
+        android:id="@+id/textSwipeHint"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Wellness Hub ›"
+        android:textColor="@color/on_surface_muted"
+        android:textSize="12sp"
+        android:alpha="0.7"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginEnd="6dp" />
+
     <androidx.cardview.widget.CardView
         android:id="@+id/searchBarContainer"
         android:layout_width="match_parent"

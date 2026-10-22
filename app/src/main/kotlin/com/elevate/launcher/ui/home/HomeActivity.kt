@@ -5,14 +5,19 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.view.GestureDetector
+import android.view.MotionEvent
 import android.view.inputmethod.EditorInfo
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.GestureDetectorCompat
+import com.elevate.launcher.R
 import com.elevate.launcher.databinding.ActivityHomeBinding
 import com.elevate.launcher.ui.drawer.AppDrawerActivity
 import com.elevate.launcher.ui.wellness.WellnessHubActivity
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.math.abs
 
 /**
  * The launcher's home screen. Registered for both HOME and plain LAUNCHER intent-filters,
@@ -21,6 +26,7 @@ import java.util.Locale
 class HomeActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityHomeBinding
+    private lateinit var gestureDetector: GestureDetectorCompat
     private val clockHandler = Handler(Looper.getMainLooper())
     private val clockFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
     private val dateFormat = SimpleDateFormat("EEEE, d MMMM", Locale.getDefault())
@@ -40,9 +46,7 @@ class HomeActivity : AppCompatActivity() {
         binding.cardAllApps.setOnClickListener {
             startActivity(Intent(this, AppDrawerActivity::class.java))
         }
-        binding.cardWellness.setOnClickListener {
-            startActivity(Intent(this, WellnessHubActivity::class.java))
-        }
+        binding.cardWellness.setOnClickListener { openWellnessHub() }
         binding.editSearch.setOnEditorActionListener { textView, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                 val query = textView.text?.toString().orEmpty()
@@ -55,6 +59,43 @@ class HomeActivity : AppCompatActivity() {
                 false
             }
         }
+
+        // Smart-Launcher-style page swipe: swipe right anywhere on the home screen
+        // to open the Wellness Hub, like sliding to a side page.
+        gestureDetector = GestureDetectorCompat(this, object : GestureDetector.SimpleOnGestureListener() {
+            override fun onFling(
+                e1: MotionEvent?,
+                e2: MotionEvent,
+                velocityX: Float,
+                velocityY: Float
+            ): Boolean {
+                if (e1 == null) return false
+                val deltaX = e2.x - e1.x
+                val deltaY = e2.y - e1.y
+                val swipedRight = deltaX > SWIPE_DISTANCE_THRESHOLD &&
+                    abs(deltaX) > abs(deltaY) &&
+                    abs(velocityX) > SWIPE_VELOCITY_THRESHOLD
+                if (swipedRight) {
+                    openWellnessHub()
+                    return true
+                }
+                return false
+            }
+        })
+        binding.root.setOnTouchListener { _, event ->
+            gestureDetector.onTouchEvent(event)
+            false // let taps still reach the buttons/search field underneath
+        }
+    }
+
+    private fun openWellnessHub() {
+        startActivity(Intent(this, WellnessHubActivity::class.java))
+        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+    }
+
+    companion object {
+        private const val SWIPE_DISTANCE_THRESHOLD = 100
+        private const val SWIPE_VELOCITY_THRESHOLD = 100
     }
 
     override fun onResume() {
