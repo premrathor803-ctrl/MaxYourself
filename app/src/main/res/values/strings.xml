@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Elevate Launcher</string>
+
+    <string name="all_apps">All Apps</string>
+    <string name="wellness_hub">Wellness Hub</string>
+    <string name="search_apps_hint">Search apps…</string>
+    <string name="category_other">Other</string>
+    <string name="category_game">Games</string>
+    <string name="category_audio">Music &amp; Audio</string>
+    <string name="category_video">Video</string>
+    <string name="category_image">Photo &amp; Image</string>
+    <string name="category_social">Social</string>
+    <string name="category_news">News</string>
+    <string name="category_maps">Maps &amp; Travel</string>
+    <string name="category_productivity">Productivity</string>
+
+    <string name="tab_grooming">Grooming &amp; Style</string>
+    <string name="tab_posture">Posture &amp; Growth</string>
+    <string name="tab_workout">Home Workout</string>
+
+    <string name="mark_done_today">Mark done today</string>
+    <string name="done_today">Done today ✓</string>
+    <string name="streak_format">🔥 %1$d day streak</string>
+    <string name="streak_zero">Start your streak today</string>
+
+    <string name="posture_disclaimer">Height is mostly genetic. These routines won\'t add inches once growth plates close — but they genuinely improve posture, how tall you look, and spinal/joint health. Think of this as posture training, not a height-increase product.</string>
+    <string name="general_disclaimer_wellness">These are general wellness tips, not medical advice. For skin, joint or growth concerns, please see a doctor or dermatologist.</string>
+</resources>
