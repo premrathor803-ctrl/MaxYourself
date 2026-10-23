@@ -2,6 +2,7 @@ package com.elevate.launcher.core
 
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
@@ -32,9 +33,19 @@ open class BaseActivity : AppCompatActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         window.statusBarColor = Color.TRANSPARENT
         window.navigationBarColor = Color.TRANSPARENT
+        if (Build.VERSION.SDK_INT >= 29) {
+            window.isNavigationBarContrastEnforced = false
+            window.isStatusBarContrastEnforced = false
+        }
         val ctl = WindowCompat.getInsetsController(window, window.decorView)
         ctl.isAppearanceLightStatusBars = lightIcons
         ctl.isAppearanceLightNavigationBars = lightIcons
+    }
+
+    protected fun setLightIcons(light: Boolean) {
+        val ctl = WindowCompat.getInsetsController(window, window.decorView)
+        ctl.isAppearanceLightStatusBars = light
+        ctl.isAppearanceLightNavigationBars = light
     }
 
     @Suppress("DEPRECATION")

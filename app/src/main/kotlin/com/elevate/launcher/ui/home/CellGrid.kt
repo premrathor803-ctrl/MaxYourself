@@ -94,6 +94,9 @@ class CellGrid(ctx: Context) : ViewGroup(ctx) {
     var pageIndex = -1
     var highlight = -1
         set(v) { if (field != v) { field = v; invalidate() } }
+    /** Shows faint cell outlines while the home screen is in edit mode. */
+    var showGrid = false
+        set(v) { if (field != v) { field = v; invalidate() } }
 
     private val hl = Paint(Paint.ANTI_ALIAS_FLAG)
 
@@ -153,8 +156,19 @@ class CellGrid(ctx: Context) : ViewGroup(ctx) {
     }
 
     override fun onDraw(canvas: Canvas) {
-        if (highlight < 0) return
         val cw = cellW(); val ch = cellH()
+        if (showGrid) {
+            hl.style = Paint.Style.STROKE
+            hl.strokeWidth = context.dpf(1f)
+            hl.color = 0x55FFFFFF
+            val inset = context.dpf(5f)
+            for (r in 0 until rows) for (c in 0 until cols) {
+                val x = paddingLeft + c * cw; val y = paddingTop + r * ch
+                canvas.drawRoundRect(RectF(x + inset, y + inset, x + cw - inset, y + ch - inset), context.dpf(14f), context.dpf(14f), hl)
+            }
+            hl.style = Paint.Style.FILL
+        }
+        if (highlight < 0) return
         val col = highlight % cols; val row = highlight / cols
         val x = paddingLeft + col * cw; val y = paddingTop + row * ch
         hl.color = (Palette.accent and 0x00FFFFFF) or 0x55000000

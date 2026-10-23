@@ -45,6 +45,7 @@ interface DrawerHost {
     fun openSettings()
     fun openCenter(section: String?)
     fun openHiddenApps()
+    fun onDrawerState(open: Boolean)
 }
 
 sealed class Row {
@@ -73,7 +74,7 @@ class DrawerView(ctx: Context, private val host: DrawerHost) : FrameLayout(ctx) 
     init {
         visibility = View.GONE
         isClickable = true
-        setBackgroundColor((Palette.bg and 0x00FFFFFF) or 0xF4000000.toInt())
+        setBackgroundColor(Palette.bg)
 
         val col = LinearLayout(ctx).apply { orientation = LinearLayout.VERTICAL }
         addView(col, LayoutParams(MATCH, MATCH))
@@ -176,6 +177,7 @@ class DrawerView(ctx: Context, private val host: DrawerHost) : FrameLayout(ctx) 
     fun open(focusSearch: Boolean) {
         if (isOpen) return
         isOpen = true
+        host.onDrawerState(true)
         if (gridMode != (Prefs.drawerStyle == "grid") || (gridMode && (list.layoutManager as? GridLayoutManager)?.spanCount != Prefs.drawerCols)) applyLayoutManager()
         rebuild()
         visibility = View.VISIBLE
@@ -192,6 +194,7 @@ class DrawerView(ctx: Context, private val host: DrawerHost) : FrameLayout(ctx) 
     fun close() {
         if (!isOpen) return
         isOpen = false
+        host.onDrawerState(false)
         hideKeyboard()
         search.setText("")
         group = "All"

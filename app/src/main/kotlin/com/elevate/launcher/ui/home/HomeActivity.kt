@@ -364,6 +364,11 @@ class HomeActivity : BaseActivity(), DrawerHost {
 
     override fun openHiddenApps() { toast("Hidden apps arrive in a later build") }
 
+    override fun onDrawerState(open: Boolean) {
+        // The drawer has a solid themed background, so status/nav icons must follow the theme while it is open.
+        setLightIcons(if (open) !Palette.dark else (if (Prefs.wallpaper) false else !Palette.dark))
+    }
+
     fun openDrawer(focusSearch: Boolean) { drawer.open(focusSearch) }
 
     // ------------------------------------------------------------------ gestures
