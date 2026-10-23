@@ -18,11 +18,11 @@
     </style>
 
     <!-- Accent overlays, applied at runtime with theme.applyStyle -->
-    <style name="Accent.Teal"><item name="colorPrimary">#19B5A5</item><item name="colorSecondary">#19B5A5</item><item name="colorAccent">#19B5A5</item></style>
-    <style name="Accent.Violet"><item name="colorPrimary">#8B6CFF</item><item name="colorSecondary">#8B6CFF</item><item name="colorAccent">#8B6CFF</item></style>
-    <style name="Accent.Orange"><item name="colorPrimary">#F2882E</item><item name="colorSecondary">#F2882E</item><item name="colorAccent">#F2882E</item></style>
-    <style name="Accent.Rose"><item name="colorPrimary">#E5527A</item><item name="colorSecondary">#E5527A</item><item name="colorAccent">#E5527A</item></style>
-    <style name="Accent.Blue"><item name="colorPrimary">#3B82F6</item><item name="colorSecondary">#3B82F6</item><item name="colorAccent">#3B82F6</item></style>
-    <style name="Accent.Green"><item name="colorPrimary">#3FB950</item><item name="colorSecondary">#3FB950</item><item name="colorAccent">#3FB950</item></style>
-    <style name="Accent.Gold"><item name="colorPrimary">#E3B341</item><item name="colorSecondary">#E3B341</item><item name="colorAccent">#E3B341</item></style>
+    <style name="Accent.Teal" parent=""><item name="colorPrimary">#19B5A5</item><item name="colorSecondary">#19B5A5</item><item name="colorAccent">#19B5A5</item></style>
+    <style name="Accent.Violet" parent=""><item name="colorPrimary">#8B6CFF</item><item name="colorSecondary">#8B6CFF</item><item name="colorAccent">#8B6CFF</item></style>
+    <style name="Accent.Orange" parent=""><item name="colorPrimary">#F2882E</item><item name="colorSecondary">#F2882E</item><item name="colorAccent">#F2882E</item></style>
+    <style name="Accent.Rose" parent=""><item name="colorPrimary">#E5527A</item><item name="colorSecondary">#E5527A</item><item name="colorAccent">#E5527A</item></style>
+    <style name="Accent.Blue" parent=""><item name="colorPrimary">#3B82F6</item><item name="colorSecondary">#3B82F6</item><item name="colorAccent">#3B82F6</item></style>
+    <style name="Accent.Green" parent=""><item name="colorPrimary">#3FB950</item><item name="colorSecondary">#3FB950</item><item name="colorAccent">#3FB950</item></style>
+    <style name="Accent.Gold" parent=""><item name="colorPrimary">#E3B341</item><item name="colorSecondary">#E3B341</item><item name="colorAccent">#E3B341</item></style>
 </resources>
