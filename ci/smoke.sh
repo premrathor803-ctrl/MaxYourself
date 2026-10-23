@@ -20,11 +20,12 @@ adb logcat -c
 shot() { adb exec-out screencap -p > "out/$1.png" 2>/dev/null || true; }
 
 : > out/starts.txt
-while read -r name cls; do
+while read -r name cls extras; do
   [ -z "${name:-}" ] && continue
   case "$name" in \#*) continue;; esac
   echo "== $name ($cls)" >> out/starts.txt
-  adb shell am start -W -n "$PKG/$cls" --ez ci_skip_onboarding true >> out/starts.txt 2>&1
+  # </dev/null: adb shell would otherwise swallow the rest of activities.txt from the loop's stdin
+  adb shell am start -W -n "$PKG/$cls" --ez ci_skip_onboarding true $extras >> out/starts.txt 2>&1 < /dev/null
   sleep 4
   shot "$name"
 done < ci/activities.txt

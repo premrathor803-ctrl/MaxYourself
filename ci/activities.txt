@@ -1,4 +1,5 @@
-# name  activity-class (relative to com.elevate.launcher)
+# name  activity-class (relative to com.elevate.launcher)  [extra args for am start]
 home .ui.home.HomeActivity
-drawer .ui.drawer.AppDrawerActivity
-wellness .ui.wellness.WellnessHubActivity
+home-p0 .ui.home.HomeActivity --ei ci_page 0
+home-drawer .ui.home.HomeActivity --ez ci_open_drawer true
+home-search .ui.home.HomeActivity --es ci_search cam

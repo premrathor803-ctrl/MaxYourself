@@ -1,11 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <style name="Theme.ElevateLauncher" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="colorPrimary">@color/primary</item>
-        <item name="colorPrimaryDark">@color/primary_dark</item>
-        <item name="colorAccent">@color/primary</item>
-        <item name="android:windowBackground">@color/background</item>
-        <item name="android:statusBarColor" tools:targetApi="21">@color/background</item>
-        <item name="android:navigationBarColor" tools:targetApi="21">@color/background</item>
+
+    <style name="Theme.Elevate" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">#19B5A5</item>
+        <item name="colorSecondary">#19B5A5</item>
+        <item name="colorAccent">#19B5A5</item>
+        <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>
+
+    <!-- Home screen when the system wallpaper should show through -->
+    <style name="Theme.Elevate.Wallpaper" parent="Theme.Elevate">
+        <item name="android:windowShowWallpaper">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+    </style>
+
+    <!-- Accent overlays, applied at runtime with theme.applyStyle -->
+    <style name="Accent.Teal"><item name="colorPrimary">#19B5A5</item><item name="colorSecondary">#19B5A5</item><item name="colorAccent">#19B5A5</item></style>
+    <style name="Accent.Violet"><item name="colorPrimary">#8B6CFF</item><item name="colorSecondary">#8B6CFF</item><item name="colorAccent">#8B6CFF</item></style>
+    <style name="Accent.Orange"><item name="colorPrimary">#F2882E</item><item name="colorSecondary">#F2882E</item><item name="colorAccent">#F2882E</item></style>
+    <style name="Accent.Rose"><item name="colorPrimary">#E5527A</item><item name="colorSecondary">#E5527A</item><item name="colorAccent">#E5527A</item></style>
+    <style name="Accent.Blue"><item name="colorPrimary">#3B82F6</item><item name="colorSecondary">#3B82F6</item><item name="colorAccent">#3B82F6</item></style>
+    <style name="Accent.Green"><item name="colorPrimary">#3FB950</item><item name="colorSecondary">#3FB950</item><item name="colorAccent">#3FB950</item></style>
+    <style name="Accent.Gold"><item name="colorPrimary">#E3B341</item><item name="colorSecondary">#E3B341</item><item name="colorAccent">#E3B341</item></style>
 </resources>
