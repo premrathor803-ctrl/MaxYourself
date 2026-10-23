@@ -2,7 +2,7 @@ name: Build debug APK
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: [ "main" ]
   workflow_dispatch: {}
 
 permissions:
@@ -24,9 +24,7 @@ jobs:
       - name: Confirm Android SDK (pre-installed on this runner image)
         run: |
           echo "ANDROID_HOME=$ANDROID_HOME"
-          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
           ls "$ANDROID_HOME/platforms" || true
-          ls "$ANDROID_HOME/build-tools" || true
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null 2>&1 || true
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-34" "build-tools;34.0.0" > /dev/null 2>&1 || true
 
@@ -36,7 +34,24 @@ jobs:
           gradle-version: '8.7'
 
       - name: Build debug APK
-        run: gradle assembleDebug --no-daemon --stacktrace
+        run: |
+          set -o pipefail
+          gradle assembleDebug --no-daemon --stacktrace -PversionCode=${{ github.run_number }} 2>&1 | tee build.log
+
+      - name: Post build errors as a commit comment
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          {
+            echo "Build FAILED for ${GITHUB_SHA::7} (run ${{ github.run_number }})"
+            echo
+            echo '```'
+            grep -E '^(e: |ERROR:|.*error:|.*AAPT)' build.log | head -80 || true
+            sed -n '/What went wrong/,/\* Try/p' build.log | head -50 || true
+            echo '```'
+          } | head -c 60000 > report.md
+          gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/comments" -F body=@report.md
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
@@ -45,7 +60,7 @@ jobs:
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
 
-      - name: Create/update release with APK
+      - name: Publish prerelease with APK
         uses: softprops/action-gh-release@v2
         with:
           tag_name: build-${{ github.run_number }}
@@ -54,3 +69,46 @@ jobs:
           prerelease: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  smoke:
+    needs: build
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download APK
+        uses: actions/download-artifact@v4
+        with:
+          name: elevate-launcher-debug-apk
+          path: apk
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Run emulator smoke test
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 29
+          target: default
+          arch: x86_64
+          profile: pixel_4
+          disable-animations: true
+          script: bash ci/smoke.sh
+
+      - name: Publish screenshots and report
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ls -la out || true
+          gh release view ci-shots > /dev/null 2>&1 || gh release create ci-shots --prerelease --title "CI screenshots" --notes "Rolling screenshots from the emulator smoke test"
+          if ls out/*.png > /dev/null 2>&1; then gh release upload ci-shots out/*.png --clobber; fi
+          if [ -f out/report.md ]; then
+            head -c 60000 out/report.md > out/report-trim.md
+            gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/comments" -F body=@out/report-trim.md
+          fi

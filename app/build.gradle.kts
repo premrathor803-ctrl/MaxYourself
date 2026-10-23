@@ -7,21 +7,34 @@ android {
     namespace = "com.elevate.launcher"
     compileSdk = 34
 
+    signingConfigs {
+        // A fixed key (committed on purpose) so every CI build is signed the same way and
+        // new APKs install as an update over older ones. Personal sideload use only.
+        create("elevate") {
+            storeFile = file("elevate.keystore")
+            storePassword = "elevate123"
+            keyAlias = "elevate"
+            keyPassword = "elevate123"
+        }
+    }
+
     defaultConfig {
         applicationId = "com.elevate.launcher"
         minSdk = 24
         targetSdk = 34
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = (project.findProperty("versionCode") as String?)?.toIntOrNull() ?: 1
+        versionName = "2.0.0-alpha"
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("elevate")
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
         debug {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("elevate")
         }
     }
 
@@ -48,4 +61,5 @@ dependencies {
     implementation("androidx.recyclerview:recyclerview:1.3.2")
     implementation("androidx.fragment:fragment-ktx:1.8.1")
     implementation("androidx.viewpager2:viewpager2:1.1.0")
+    implementation("androidx.preference:preference-ktx:1.2.1")
 }

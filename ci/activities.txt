@@ -1,0 +1,4 @@
+# name  activity-class (relative to com.elevate.launcher)
+home .ui.home.HomeActivity
+drawer .ui.drawer.AppDrawerActivity
+wellness .ui.wellness.WellnessHubActivity
