@@ -4,17 +4,19 @@ import android.content.Intent
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
-import android.view.Gravity
 import android.view.GestureDetector
+import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import android.widget.PopupMenu
 import android.widget.TextClock
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.elevate.launcher.R
@@ -27,6 +29,7 @@ import com.elevate.launcher.core.Perf
 import com.elevate.launcher.core.Prefs
 import com.elevate.launcher.core.UiKit
 import com.elevate.launcher.core.WRAP
+import com.elevate.launcher.core.Widgets
 import com.elevate.launcher.core.dp
 import com.elevate.launcher.core.dpf
 import com.elevate.launcher.core.lp
@@ -40,7 +43,10 @@ import com.elevate.launcher.ui.IconLoader
 import com.elevate.launcher.ui.center.CenterPanelView
 import com.elevate.launcher.ui.drawer.DrawerHost
 import com.elevate.launcher.ui.drawer.DrawerView
+import com.elevate.launcher.ui.onboarding.OnboardingActivity
+import com.elevate.launcher.ui.settings.SettingsActivity
 import kotlin.math.abs
+import kotlin.math.max
 
 /**
  * The home screen. Works as a normal app (launcher icon) and as the default Home.
@@ -55,15 +61,23 @@ class HomeActivity : BaseActivity(), DrawerHost {
     private lateinit var dots: LinearLayout
     private lateinit var dock: CellGrid
     private lateinit var drawer: DrawerView
+    private lateinit var drag: DragController
     private lateinit var signature: String
+    private var editing = false
+    private var editBar: LinearLayout? = null
+    private var lastRawX = 0f
+    private var lastRawY = 0f
     private val catalogListener: () -> Unit = { onCatalogChanged() }
 
     override val opaqueWindow: Boolean get() = !Prefs.wallpaper
+
+    val insetTop: Int get() = content.paddingTop
 
     // ------------------------------------------------------------------ lifecycle
     override fun onCreate(savedInstanceState: Bundle?) {
         setTheme(if (Prefs.wallpaper) R.style.Theme_Elevate_Wallpaper else R.style.Theme_Elevate)
         super.onCreate(savedInstanceState)
+        if (intent?.getBooleanExtra("ci_skip_onboarding", false) == true) Prefs.onboarded = true
         signature = prefsSignature()
         HomeRepo.ensureGrid()
         buildUi()
@@ -71,6 +85,7 @@ class HomeActivity : BaseActivity(), DrawerHost {
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() { handleBack() }
         })
+        if (!Prefs.onboarded) startActivity(Intent(this, OnboardingActivity::class.java))
         if (AppCatalog.loaded) onCatalogChanged()
         handleExtras(intent)
     }
@@ -88,6 +103,7 @@ class HomeActivity : BaseActivity(), DrawerHost {
             return
         }
         AppCatalog.refreshIfStale(this)
+        maybeSeed()
         refreshHome()
     }
 
@@ -96,6 +112,7 @@ class HomeActivity : BaseActivity(), DrawerHost {
         setIntent(intent)
         if (intent.action == Intent.ACTION_MAIN && intent.hasCategory(Intent.CATEGORY_HOME)) {
             if (drawer.isOpen) drawer.close()
+            else if (editing) exitEdit()
             else if (pager.currentItem != 1) pager.setCurrentItem(1, Perf.animate)
         }
         handleExtras(intent)
@@ -110,9 +127,21 @@ class HomeActivity : BaseActivity(), DrawerHost {
     /** Hooks used by the automated emulator test; harmless otherwise. */
     private fun handleExtras(i: Intent?) {
         if (i == null) return
+        if (i.getBooleanExtra("ci_skip_onboarding", false)) Prefs.onboarded = true
+        if (i.getBooleanExtra("ci_exit_edit", false) && editing) exitEdit()
         if (i.hasExtra("ci_page")) pager.setCurrentItem(i.getIntExtra("ci_page", 1), false)
         if (i.getBooleanExtra("ci_open_drawer", false)) drawer.open(false)
         i.getStringExtra("ci_search")?.let { drawer.open(false); drawer.setQuery(it) }
+        if (i.getBooleanExtra("ci_edit", false)) enterEdit()
+        if (i.getBooleanExtra("ci_folder", false)) openFirstFolder()
+        i.getStringExtra("ci_action")?.let { runAction(it) }
+    }
+
+    private fun maybeSeed() {
+        if (!Prefs.seeded && Prefs.onboarded && AppCatalog.loaded) {
+            HomeRepo.seedDefaults(this)
+            Prefs.seeded = true
+        }
     }
 
     // ------------------------------------------------------------------ UI construction
@@ -192,6 +221,7 @@ class HomeActivity : BaseActivity(), DrawerHost {
         root.addView(drawer, FrameLayout.LayoutParams(MATCH, MATCH))
         padForInsets(drawer)
 
+        drag = DragController(this, root)
         updateDots()
         bindDock()
     }
@@ -203,20 +233,12 @@ class HomeActivity : BaseActivity(), DrawerHost {
         for (i in 0 until n) {
             val sel = i == cur
             val d = View(this)
-            val g = GradientDrawable().apply {
-                if (i == 0) {
-                    shape = GradientDrawable.RECTANGLE
-                    cornerRadius = dpf(2f)
-                    setColor(if (sel) HomeStyle.text else 0x66FFFFFF)
-                } else {
-                    shape = GradientDrawable.RECTANGLE
-                    cornerRadius = dpf(3f)
-                    setColor(if (sel) HomeStyle.text else (HomeStyle.text and 0x00FFFFFF) or 0x55000000)
-                }
+            d.background = GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                cornerRadius = dpf(if (i == 0) 2f else 3f)
+                setColor(if (sel) HomeStyle.text else (HomeStyle.text and 0x00FFFFFF) or 0x55000000)
             }
-            d.background = g
-            val w = if (sel) dp(16) else dp(6)
-            dots.addView(d, lp(w, dp(6)).apply { leftMargin = dp(3); rightMargin = dp(3) })
+            dots.addView(d, lp(if (sel) dp(16) else dp(6), dp(6)).apply { leftMargin = dp(3); rightMargin = dp(3) })
         }
     }
 
@@ -242,12 +264,14 @@ class HomeActivity : BaseActivity(), DrawerHost {
         grid.setGrid(Prefs.cols, Prefs.rows)
         val pad = sidePadding()
         grid.setPadding(pad, dp(4), pad, dp(4))
+        grid.showGrid = editing
         grid.removeAllViews()
         for (item in HomeRepo.pageItems(page)) grid.addView(makeItemView(item, Prefs.showLabels))
     }
 
     private fun bindDock() {
         dock.setGrid(Prefs.dockCount, 1)
+        dock.showGrid = editing
         dock.removeAllViews()
         for (item in HomeRepo.dockItems()) if (item.pos < Prefs.dockCount) dock.addView(makeItemView(item, false))
     }
@@ -271,19 +295,36 @@ class HomeActivity : BaseActivity(), DrawerHost {
     }
 
     private fun onCatalogChanged() {
-        if (!Prefs.seeded && AppCatalog.loaded) {
-            HomeRepo.seedDefaults(this)
-            Prefs.seeded = true
-        }
+        maybeSeed()
         refreshHome()
         drawer.refresh()
     }
 
+    fun dockView(): CellGrid = dock
+
+    fun currentGrid(): CellGrid? {
+        val rv = pager.getChildAt(0) as? RecyclerView ?: return null
+        return rv.findViewHolderForAdapterPosition(pager.currentItem)?.itemView as? CellGrid
+    }
+
+    /** Move to the next/previous home page while dragging; adds a page at the far right edge. */
+    fun flipPage(dir: Int) {
+        val target = pager.currentItem + dir
+        if (target < 1) return
+        if (target > Prefs.pages) {
+            if (!HomeRepo.addPage()) return
+            pager.adapter?.notifyDataSetChanged()
+            updateDots()
+        }
+        pager.setCurrentItem(target, true)
+    }
+
     // ------------------------------------------------------------------ item actions
     private fun onItemClick(v: HomeItemView, item: HomeItem) {
+        if (editing) return
         when (item.kind) {
             HomeRepo.KIND_CENTER -> openCenter(null)
-            HomeRepo.KIND_FOLDER -> toast("Folders are coming in the next build")
+            HomeRepo.KIND_FOLDER -> FolderDialog(this, item).show()
             else -> {
                 if (AppCatalog.loaded && AppCatalog.get(item.key) == null) {
                     Dialogs.confirm(this, item.label, "This app is not installed any more. Remove it from the home screen?", "Remove") {
@@ -297,21 +338,44 @@ class HomeActivity : BaseActivity(), DrawerHost {
     }
 
     private fun onItemLongPress(v: HomeItemView, item: HomeItem) {
-        val m = PopupMenu(this, v)
+        if (drawer.isOpen) return
+        drag.start(v, item, lastRawX, lastRawY)
+    }
+
+    /** Menu shown when an icon is long-pressed and released without dragging. */
+    fun showItemMenu(v: View?, item: HomeItem) {
+        val m = PopupMenu(this, v ?: content)
         if (item.isApp) {
-            m.menu.add(0, 1, 0, "App info")
-            m.menu.add(0, 2, 1, "Uninstall")
+            m.menu.add(0, 1, 0, "Rename")
+            m.menu.add(0, 2, 1, "App info")
+            m.menu.add(0, 3, 2, "Uninstall")
+            m.menu.add(0, 4, 3, "Remove from home")
+        } else if (item.isFolder) {
+            m.menu.add(0, 5, 0, "Rename folder")
+            m.menu.add(0, 4, 1, "Remove folder (apps stay installed)")
+        } else {
+            m.menu.add(0, 4, 0, "Remove from home")
         }
-        m.menu.add(0, 3, 2, "Remove from home")
+        m.menu.add(0, 6, 9, "Edit home screen")
         m.setOnMenuItemClickListener {
             when (it.itemId) {
-                1 -> Launch.appInfo(this, item.pkg)
-                2 -> Launch.uninstall(this, item.pkg)
-                3 -> { HomeRepo.remove(item); refreshHome() }
+                1 -> Dialogs.prompt(this, "Rename app", AppMeta.get(item.key)?.label?.ifBlank { null } ?: item.label) { name ->
+                    AppMeta.setLabel(item.key, name); refreshHome(); drawer.refresh()
+                }
+                2 -> Launch.appInfo(this, item.pkg)
+                3 -> Launch.uninstall(this, item.pkg)
+                4 -> { HomeRepo.remove(item); refreshHome() }
+                5 -> Dialogs.prompt(this, "Folder name", item.label) { name -> HomeRepo.renameFolder(item, name); refreshHome() }
+                6 -> enterEdit()
             }
             true
         }
         m.show()
+    }
+
+    private fun openFirstFolder() {
+        val f = HomeRepo.items.firstOrNull { it.isFolder } ?: return
+        FolderDialog(this, f).show()
     }
 
     // ------------------------------------------------------------------ DrawerHost
@@ -358,7 +422,7 @@ class HomeActivity : BaseActivity(), DrawerHost {
         m.show()
     }
 
-    override fun openSettings() { toast("Settings arrive in the next build") }
+    override fun openSettings() { startActivity(Intent(this, SettingsActivity::class.java)) }
 
     override fun openCenter(section: String?) { toast("Center arrives in a later build") }
 
@@ -370,6 +434,134 @@ class HomeActivity : BaseActivity(), DrawerHost {
     }
 
     fun openDrawer(focusSearch: Boolean) { drawer.open(focusSearch) }
+
+    // ------------------------------------------------------------------ edit mode
+    private fun enterEdit() {
+        if (editing) return
+        if (drawer.isOpen) drawer.close()
+        editing = true
+        showEditBar()
+        refreshHome()
+    }
+
+    private fun exitEdit() {
+        if (!editing) return
+        editing = false
+        editBar?.let { root.removeView(it) }
+        editBar = null
+        refreshHome()
+    }
+
+    private fun chip(label: String, onClick: () -> Unit): TextView =
+        UiKit.text(this, label, 13f, Palette.text, true).apply {
+            gravity = Gravity.CENTER
+            setPadding(dp(14), 0, dp(14), 0)
+            background = UiKit.pressable(Palette.surface2, dpf(18f))
+            setOnClickListener { onClick() }
+        }
+
+    private fun showEditBar() {
+        val bar = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            background = UiKit.rounded(if (Palette.dark) 0xF01B1E26.toInt() else 0xF0FFFFFF.toInt(), dpf(20f))
+            setPadding(dp(14), dp(10), dp(14), dp(10))
+            elevation = dpf(6f)
+        }
+        val top = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
+        top.addView(UiKit.text(this, "Edit home screen", 16f, Palette.text, true), lp(0, WRAP, 1f))
+        top.addView(UiKit.button(this, "Done", true) { exitEdit() }, lp(WRAP, dp(40)))
+        bar.addView(top, lp(MATCH, WRAP))
+        bar.addView(UiKit.text(this, "Long-press and drag icons. Drop one on another to make a folder.", 11f, Palette.dim),
+            lp(MATCH, WRAP).apply { bottomMargin = dp(6) })
+
+        val chips = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+        fun add(label: String, f: () -> Unit) { chips.addView(chip(label, f), lp(WRAP, dp(36)).apply { rightMargin = dp(8) }) }
+        add("+ Page") { addPage() }
+        add("Delete page") { deletePage() }
+        add("◀ Move page") { movePage(-1) }
+        add("Move page ▶") { movePage(1) }
+        add("Grid & icons") { showGridDialog() }
+        add("Wallpaper") { Launch.wallpaperPicker(this) }
+        add("Settings") { openSettings() }
+        add("Reset") { resetLayout() }
+        val hs = HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false; addView(chips) }
+        bar.addView(hs, lp(MATCH, WRAP))
+
+        val p = FrameLayout.LayoutParams(MATCH, WRAP).apply {
+            gravity = Gravity.TOP
+            setMargins(dp(10), insetTop + dp(6), dp(10), 0)
+        }
+        root.addView(bar, p)
+        editBar = bar
+    }
+
+    private fun addPage() {
+        if (!HomeRepo.addPage()) { toast("Maximum ${HomeRepo.MAX_PAGES} pages"); return }
+        pager.adapter?.notifyDataSetChanged()
+        pager.setCurrentItem(Prefs.pages, true)
+        updateDots()
+    }
+
+    private fun deletePage() {
+        val cur = pager.currentItem
+        if (cur == 0) { toast("Open a home page first"); return }
+        if (Prefs.pages <= 1) { toast("Keep at least one page"); return }
+        val p = cur - 1
+        val n = HomeRepo.pageItems(p).size
+        val msg = if (n > 0) "$n icon(s) on this page will be removed from the home screen. Your apps stay installed." else "Delete this empty page?"
+        Dialogs.confirm(this, "Delete page ${p + 1}", msg, "Delete") {
+            HomeRepo.removePage(p)
+            pager.adapter?.notifyDataSetChanged()
+            pager.setCurrentItem(max(1, cur - 1), false)
+            refreshHome()
+        }
+    }
+
+    private fun movePage(dir: Int) {
+        val cur = pager.currentItem
+        if (cur == 0) { toast("Open a home page first"); return }
+        val from = cur - 1
+        val to = from + dir
+        if (to < 0 || to >= Prefs.pages) return
+        HomeRepo.swapPages(from, to)
+        refreshHome()
+        pager.setCurrentItem(cur + dir, true)
+    }
+
+    private fun showGridDialog() {
+        var cols = Prefs.cols
+        var rows = Prefs.rows
+        var dockN = Prefs.dockCount
+        var scale = Prefs.iconScale
+        val col = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(22), dp(8), dp(22), 0) }
+        col.addView(Widgets.stepper(this, "Columns", cols, 3, 6) { cols = it })
+        col.addView(Widgets.stepper(this, "Rows", rows, 3, 7) { rows = it })
+        col.addView(Widgets.stepper(this, "Dock icons", dockN, 3, 6) { dockN = it })
+        col.addView(Widgets.stepper(this, "Icon size", scale, 70, 130, 15, { "$it%" }) { scale = it })
+        AlertDialog.Builder(this)
+            .setTitle("Grid & icons")
+            .setView(col)
+            .setPositiveButton("Apply") { _, _ ->
+                Prefs.putString("cols", cols.toString())
+                Prefs.putString("rows", rows.toString())
+                Prefs.putString("dock_count", dockN.toString())
+                Prefs.putString("icon_scale", scale.toString())
+                HomeRepo.ensureGrid()
+                IconLoader.clear()
+                recreate()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun resetLayout() {
+        Dialogs.confirm(this, "Reset home screen", "Icons, folders and pages go back to the default arrangement. Your apps stay installed.", "Reset") {
+            HomeRepo.reset(this)
+            pager.adapter?.notifyDataSetChanged()
+            pager.setCurrentItem(1, false)
+            refreshHome()
+        }
+    }
 
     // ------------------------------------------------------------------ gestures
     private val detector by lazy {
@@ -399,13 +591,23 @@ class HomeActivity : BaseActivity(), DrawerHost {
     }
 
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
-        if (::pager.isInitialized && !drawer.isOpen && pager.currentItem != 0) detector.onTouchEvent(ev)
+        if (!::drag.isInitialized) return super.dispatchTouchEvent(ev)
+        if (ev.actionMasked == MotionEvent.ACTION_DOWN || ev.actionMasked == MotionEvent.ACTION_MOVE) {
+            lastRawX = ev.rawX; lastRawY = ev.rawY
+        }
+        if (drag.active) {
+            if (drag.needCancel) {
+                drag.needCancel = false
+                val c = MotionEvent.obtain(ev)
+                c.action = MotionEvent.ACTION_CANCEL
+                super.dispatchTouchEvent(c)
+                c.recycle()
+            }
+            drag.onTouch(ev)
+            return true
+        }
+        if (!editing && !drawer.isOpen && pager.currentItem != 0) detector.onTouchEvent(ev)
         return super.dispatchTouchEvent(ev)
-    }
-
-    private fun currentGrid(): CellGrid? {
-        val rv = pager.getChildAt(0) as? RecyclerView ?: return null
-        return rv.findViewHolderForAdapterPosition(pager.currentItem)?.itemView as? CellGrid
     }
 
     private fun isEmptyAt(rawX: Float, rawY: Float): Boolean {
@@ -430,6 +632,7 @@ class HomeActivity : BaseActivity(), DrawerHost {
             a == "center" -> openCenter(null)
             a == "settings" -> openSettings()
             a == "menu" -> showHomeMenu()
+            a == "edit" -> enterEdit()
             a.startsWith("app:") -> {
                 val e = AppCatalog.get(a.removePrefix("app:"))
                 if (e != null) Launch.app(this, e.pkg, e.cls) else toast("That app is not installed")
@@ -439,19 +642,22 @@ class HomeActivity : BaseActivity(), DrawerHost {
 
     private fun showHomeMenu() {
         val opts = ArrayList<String>()
+        opts.add("Edit home screen")
         opts.add("Wallpaper")
         opts.add("Launcher settings")
         val hasCenter = HomeRepo.items.any { it.kind == HomeRepo.KIND_CENTER }
         if (!hasCenter) opts.add("Add Center shortcut")
         Dialogs.list(this, "Home screen", opts) { i ->
             when (opts[i]) {
+                "Edit home screen" -> enterEdit()
                 "Wallpaper" -> Launch.wallpaperPicker(this)
                 "Launcher settings" -> openSettings()
                 "Add Center shortcut" -> {
                     val cap = Prefs.cols * Prefs.rows
                     val page = (pager.currentItem - 1).coerceAtLeast(0)
                     val pos = HomeRepo.firstFree(HomeRepo.PAGE, page, cap)
-                    if (pos == null) toast("This page is full") else { HomeRepo.add(HomeRepo.KIND_CENTER, "", "", "Center", HomeRepo.PAGE, page, pos); refreshHome() }
+                    if (pos == null) toast("This page is full")
+                    else { HomeRepo.add(HomeRepo.KIND_CENTER, "", "", "Center", HomeRepo.PAGE, page, pos); refreshHome() }
                 }
             }
         }
@@ -459,6 +665,7 @@ class HomeActivity : BaseActivity(), DrawerHost {
 
     private fun handleBack() {
         if (drawer.handleBack()) return
+        if (editing) { exitEdit(); return }
         if (pager.currentItem != 1) pager.setCurrentItem(1, Perf.animate)
     }
 }

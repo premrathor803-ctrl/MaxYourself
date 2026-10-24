@@ -36,6 +36,35 @@ adb shell input keyevent KEYCODE_HOME
 sleep 3
 shot home-after-keyhome
 
+# ---- gesture checks on the home screen (drag & drop, folder, edit mode, long-press menu)
+adb shell am start -W -n "$PKG/.ui.home.HomeActivity" --ez ci_skip_onboarding true --ei ci_page 1 < /dev/null >> out/starts.txt 2>&1
+sleep 2
+shot g0-home
+# drag Calendar onto Email: should create a folder
+adb shell input draganddrop 156 893 412 893 900 < /dev/null >> out/starts.txt 2>&1
+sleep 2
+shot g1-after-drag-folder
+adb shell am start -W -n "$PKG/.ui.home.HomeActivity" --ez ci_folder true < /dev/null >> out/starts.txt 2>&1
+sleep 2
+shot g2-folder-dialog
+adb shell input keyevent KEYCODE_BACK < /dev/null
+sleep 1
+adb shell am start -W -n "$PKG/.ui.home.HomeActivity" --ez ci_edit true < /dev/null >> out/starts.txt 2>&1
+sleep 2
+shot g3-edit-mode
+adb shell am start -W -n "$PKG/.ui.home.HomeActivity" --ez ci_exit_edit true < /dev/null >> out/starts.txt 2>&1
+sleep 1
+# long press (no move) on Settings icon: quick menu
+adb shell input swipe 412 630 412 630 1200 < /dev/null >> out/starts.txt 2>&1
+sleep 1
+shot g4-long-press-menu
+adb shell input keyevent KEYCODE_BACK < /dev/null
+sleep 1
+# drag Settings to the dock area's neighbour page cell (empty cell on same page)
+adb shell input draganddrop 412 630 668 1130 900 < /dev/null >> out/starts.txt 2>&1
+sleep 2
+shot g5-after-move
+
 # Random UI events inside our package
 adb shell monkey -p "$PKG" --throttle 150 -s 42 --pct-syskeys 0 -v 700 > out/monkey.txt 2>&1 || true
 sleep 2

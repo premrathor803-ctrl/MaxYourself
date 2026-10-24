@@ -29,7 +29,13 @@ object HomeStyle {
 }
 
 /** One icon + label on the home screen / dock / folder. */
-class HomeItemView(ctx: Context, var item: HomeItem, private val showLabel: Boolean) : LinearLayout(ctx) {
+class HomeItemView(
+    ctx: Context,
+    var item: HomeItem,
+    private val showLabel: Boolean,
+    textColor: Int = HomeStyle.text,
+    shadowed: Boolean = Prefs.wallpaper
+) : LinearLayout(ctx) {
     val icon = ImageView(ctx)
     val label = TextView(ctx)
     var iconPx = 0
@@ -44,11 +50,11 @@ class HomeItemView(ctx: Context, var item: HomeItem, private val showLabel: Bool
         addView(icon, LayoutParams(ctx.dp(48), ctx.dp(48)))
         label.apply {
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
-            setTextColor(HomeStyle.text)
+            setTextColor(textColor)
             maxLines = 1
             ellipsize = TextUtils.TruncateAt.END
             gravity = Gravity.CENTER
-            if (Prefs.wallpaper) setShadowLayer(5f, 0f, 1f, 0xAA000000.toInt())
+            if (shadowed) setShadowLayer(5f, 0f, 1f, 0xAA000000.toInt())
             visibility = if (showLabel) View.VISIBLE else View.GONE
         }
         addView(label, LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = ctx.dp(3) })

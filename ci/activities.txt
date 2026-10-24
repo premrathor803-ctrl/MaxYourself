@@ -3,3 +3,5 @@ home .ui.home.HomeActivity
 home-p0 .ui.home.HomeActivity --ei ci_page 0
 home-drawer .ui.home.HomeActivity --ez ci_open_drawer true
 home-search .ui.home.HomeActivity --es ci_search cam
+settings .ui.settings.SettingsActivity
+onboarding .ui.onboarding.OnboardingActivity

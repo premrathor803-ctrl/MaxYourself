@@ -108,6 +108,20 @@ object HomeRepo {
         return add(KIND_APP, e.pkg, e.cls, e.label, PAGE, Prefs.pages - 1, 0)
     }
 
+    /** Moves an existing item (e.g. out of a folder) to the first empty cell on any page. */
+    fun moveToFirstFree(item: HomeItem): Boolean {
+        val cap = Prefs.cols * Prefs.rows
+        for (p in 0 until Prefs.pages) {
+            val pos = firstFree(PAGE, p, cap) ?: continue
+            place(item, PAGE, p, pos)
+            return true
+        }
+        if (Prefs.pages >= MAX_PAGES) return false
+        Prefs.pages = Prefs.pages + 1
+        place(item, PAGE, Prefs.pages - 1, 0)
+        return true
+    }
+
     fun addAppToDock(e: AppEntry): HomeItem? {
         val pos = firstFree(DOCK, 0, Prefs.dockCount) ?: return null
         return add(KIND_APP, e.pkg, e.cls, e.label, DOCK, 0, pos)
