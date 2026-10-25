@@ -30,6 +30,64 @@ while read -r name cls extras; do
   shot "$name"
 done < ci/activities.txt
 
+# ---- Center interaction checks (uses uiautomator to find buttons by their text)
+tap_text() {
+  adb shell uiautomator dump /sdcard/ui.xml < /dev/null > /dev/null 2>&1
+  adb pull /sdcard/ui.xml out/ui.xml > /dev/null 2>&1
+  python3 - "$1" <<'PY'
+import re, sys
+import xml.etree.ElementTree as ET
+t = sys.argv[1]
+try:
+    root = ET.parse('out/ui.xml').getroot()
+except Exception:
+    sys.exit(0)
+for n in root.iter('node'):
+    if n.get('text') == t:
+        m = re.findall(r'\d+', n.get('bounds') or '')
+        if len(m) == 4:
+            print((int(m[0]) + int(m[2])) // 2, (int(m[1]) + int(m[3])) // 2)
+            break
+PY
+}
+tap_label() {
+  local xy
+  xy=$(tap_text "$1")
+  if [ -n "$xy" ]; then
+    adb shell input tap $xy < /dev/null >> out/starts.txt 2>&1
+    echo "tapped '$1' at $xy" >> out/starts.txt
+  else
+    echo "could not find '$1' on screen" >> out/starts.txt
+  fi
+}
+
+adb shell am start -W -n "$PKG/.center.ui.CenterActivity" --es section player:beginner_full_a < /dev/null >> out/starts.txt 2>&1
+sleep 3
+shot c1-player-intro
+tap_label "Start"
+sleep 3
+shot c2-player-work
+tap_label "Done early"
+sleep 2
+shot c3-player-rest
+tap_label "Skip rest"
+sleep 2
+shot c4-player-intro2
+tap_label "End"
+sleep 2
+shot c5-player-end-dialog
+tap_label "Save what I did and finish"
+sleep 3
+shot c6-after-save
+adb shell am start -W -n "$PKG/.center.ui.CenterActivity" --es section history < /dev/null >> out/starts.txt 2>&1
+sleep 3
+shot c7-history-after-save
+adb shell am start -W -n "$PKG/.center.ui.CenterActivity" < /dev/null >> out/starts.txt 2>&1
+sleep 3
+tap_label "Drink water"
+sleep 3
+shot c8-habit-detail
+
 # Make our launcher the HOME app (best effort) and press Home, to test the HOME flow
 adb shell cmd package set-home-activity "$PKG/$(grep -m1 '^home ' ci/activities.txt | awk '{print $2}')" >> out/starts.txt 2>&1 || true
 adb shell input keyevent KEYCODE_HOME

@@ -200,6 +200,9 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
         // ---------------------------------------------------------------- data
         val data = cat("Your data")
         action(data, "Where is my data?", "Everything stays on this phone. Elevate has no account and does not send your data anywhere.") { }
+        action(data, "Center data and settings", "Habits, workouts, goals and logs. Delete any of them, or all of them.") {
+            com.elevate.launcher.center.ui.CenterActivity.open(requireContext(), "settings")
+        }
         action(data, "Reset launcher settings", "Theme, grid, gestures and other options go back to defaults. Home layout is kept.") {
             Dialogs.confirm(requireContext(), "Reset settings?", "All launcher options return to their defaults. Your home layout and Center data are kept.", "Reset") { resetSettings() }
         }

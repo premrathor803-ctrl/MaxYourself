@@ -40,6 +40,7 @@ import com.elevate.launcher.data.AppMeta
 import com.elevate.launcher.data.HomeItem
 import com.elevate.launcher.data.HomeRepo
 import com.elevate.launcher.ui.IconLoader
+import com.elevate.launcher.center.ui.CenterActivity
 import com.elevate.launcher.ui.center.CenterPanelView
 import com.elevate.launcher.ui.drawer.DrawerHost
 import com.elevate.launcher.ui.drawer.DrawerView
@@ -424,7 +425,7 @@ class HomeActivity : BaseActivity(), DrawerHost {
 
     override fun openSettings() { startActivity(Intent(this, SettingsActivity::class.java)) }
 
-    override fun openCenter(section: String?) { toast("Center arrives in a later build") }
+    override fun openCenter(section: String?) { CenterActivity.open(this, section) }
 
     override fun openHiddenApps() { toast("Hidden apps arrive in a later build") }
 

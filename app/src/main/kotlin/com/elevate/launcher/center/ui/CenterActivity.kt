@@ -1,0 +1,223 @@
+package com.elevate.launcher.center.ui
+
+import android.content.Context
+import android.content.Intent
+import android.content.pm.ActivityInfo
+import android.os.Bundle
+import android.view.Gravity
+import android.view.View
+import android.widget.FrameLayout
+import android.widget.LinearLayout
+import android.widget.ScrollView
+import android.widget.TextView
+import androidx.activity.OnBackPressedCallback
+import com.elevate.launcher.center.content.Articles
+import com.elevate.launcher.center.content.Exercises
+import com.elevate.launcher.center.content.Plans
+import com.elevate.launcher.center.data.Center
+import com.elevate.launcher.core.BaseActivity
+import com.elevate.launcher.core.MATCH
+import com.elevate.launcher.core.Palette
+import com.elevate.launcher.core.UiKit
+import com.elevate.launcher.core.WRAP
+import com.elevate.launcher.core.dp
+import com.elevate.launcher.core.lp
+
+/** One screen inside the Center. Screens are rebuilt from the database each time they are shown. */
+abstract class Screen(val host: CenterActivity) {
+    abstract val title: String
+    open val scrolls: Boolean = true
+
+    /** Optional text action shown at the top right. */
+    open val actionLabel: String? = null
+    open fun onAction() {}
+
+    abstract fun build(): View
+    open fun onShow() {}
+    open fun onHide() {}
+    open fun onPauseScreen() {}
+    open fun onResumeScreen() {}
+
+    /** Return true if the back press was handled by the screen itself. */
+    open fun onBack(): Boolean = false
+}
+
+class CenterActivity : BaseActivity() {
+    private val stack = ArrayList<Screen>()
+    private lateinit var titleView: TextView
+    private lateinit var actionView: TextView
+    private lateinit var body: FrameLayout
+    private var scroll: ScrollView? = null
+    private var started = false
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        Center.init(this)
+
+        val root = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setBackgroundColor(Palette.bg)
+        }
+        val bar = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(4), dp(4), dp(8), dp(4))
+        }
+        val back = UiKit.text(this, "‹", 32f, Palette.text, true).apply {
+            gravity = Gravity.CENTER
+            contentDescription = "Back"
+            setOnClickListener { back() }
+        }
+        titleView = UiKit.text(this, "Center", 20f, Palette.text, true).apply { isSingleLine = true }
+        actionView = UiKit.text(this, "", 14f, Palette.accent, true).apply {
+            setPadding(dp(12), dp(10), dp(12), dp(10))
+            setOnClickListener { stack.lastOrNull()?.onAction() }
+            visibility = View.GONE
+        }
+        bar.addView(back, lp(dp(48), dp(48)))
+        bar.addView(titleView, lp(0, WRAP, 1f))
+        bar.addView(actionView, lp(WRAP, WRAP))
+        body = FrameLayout(this)
+        root.addView(bar, lp(MATCH, WRAP))
+        root.addView(body, lp(MATCH, 0, 1f))
+        setContentView(root)
+        edgeToEdge(root)
+
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() { back() }
+        })
+
+        stack.add(DashboardScreen(this))
+        val section = intent.getStringExtra(EXTRA_SECTION)
+        if (intent.getBooleanExtra("ci_seed", false)) CenterSeed.run()
+        if (section != null && section != "home") openSection(section, false)
+        show()
+        started = true
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (started) stack.lastOrNull()?.onResumeScreen()
+    }
+
+    override fun onPause() {
+        stack.lastOrNull()?.onPauseScreen()
+        super.onPause()
+    }
+
+    override fun onDestroy() {
+        stack.lastOrNull()?.onHide()
+        super.onDestroy()
+    }
+
+    // ------------------------------------------------------------ navigation
+    fun push(s: Screen) {
+        stack.lastOrNull()?.onHide()
+        stack.add(s)
+        show()
+    }
+
+    fun pop() {
+        if (stack.size <= 1) { finish(); return }
+        stack.last().onHide()
+        stack.removeAt(stack.size - 1)
+        show()
+    }
+
+    fun back() {
+        val top = stack.lastOrNull() ?: run { finish(); return }
+        if (top.onBack()) return
+        pop()
+    }
+
+    /** Rebuild the screen on top (after data changed) while keeping the scroll position. */
+    fun refresh() {
+        val y = scroll?.scrollY ?: 0
+        stack.lastOrNull()?.onHide()
+        show()
+        scroll?.post { scroll?.scrollTo(0, y) }
+    }
+
+    /** Re-reads the top screen's action label (used by screens whose action changes while they are open). */
+    fun refreshAction() {
+        val s = stack.lastOrNull() ?: return
+        val label = s.actionLabel
+        if (label == null) {
+            actionView.visibility = View.GONE
+        } else {
+            actionView.text = label
+            actionView.visibility = View.VISIBLE
+        }
+    }
+
+    private fun show() {
+        val s = stack.last()
+        titleView.text = s.title
+        val label = s.actionLabel
+        if (label == null) {
+            actionView.visibility = View.GONE
+        } else {
+            actionView.text = label
+            actionView.visibility = View.VISIBLE
+        }
+        body.removeAllViews()
+        scroll = null
+        val content = s.build()
+        if (s.scrolls) {
+            val sv = ScrollView(this)
+            sv.isFillViewport = false
+            val pad = LinearLayout(this)
+            pad.orientation = LinearLayout.VERTICAL
+            pad.setPadding(dp(16), dp(4), dp(16), dp(28))
+            pad.addView(content, lp(MATCH, WRAP))
+            sv.addView(pad, FrameLayout.LayoutParams(MATCH, WRAP))
+            body.addView(sv, FrameLayout.LayoutParams(MATCH, MATCH))
+            scroll = sv
+        } else {
+            body.addView(content, FrameLayout.LayoutParams(MATCH, MATCH))
+        }
+        s.onShow()
+    }
+
+    /**
+     * Opens a named section on top of the dashboard. Understands "habits", "workouts", "grooming", "posture",
+     * "goals", "progress", "learn", "settings", "height", "sleep" and deep links "article:key", "exercise:key", "plan:key".
+     */
+    fun openSection(section: String, render: Boolean = true) {
+        val screen: Screen? = when {
+            section == "habits" -> HabitsScreen(this)
+            section == "workouts" -> WorkoutsScreen(this)
+            section == "grooming" -> GroomingScreen(this)
+            section == "posture" -> PostureScreen(this)
+            section == "goals" -> GoalsScreen(this)
+            section == "progress" -> ProgressScreen(this)
+            section == "learn" -> LearnScreen(this)
+            section == "settings" -> CenterSettingsScreen(this)
+            section == "height" -> HeightScreen(this)
+            section == "sleep" -> SleepScreen(this)
+            section == "library" -> ExerciseLibraryScreen(this, null)
+            section == "history" -> HistoryScreen(this)
+            section == "glossary" -> GlossaryScreen(this)
+            section == "care" -> CareLogScreen(this)
+            section.startsWith("article:") -> Articles.get(section.removePrefix("article:"))?.let { ArticleScreen(this, it) }
+            section.startsWith("exercise:") -> Exercises.get(section.removePrefix("exercise:"))?.let { ExerciseDetailScreen(this, it) }
+            section.startsWith("player:") -> Plans.get(section.removePrefix("player:"))?.let { PlayerScreen(this, it, null) }
+            section.startsWith("plan:") -> Plans.get(section.removePrefix("plan:"))?.let { PlanDetailScreen(this, it) }
+            else -> null
+        }
+        if (screen == null) return
+        if (render) push(screen) else stack.add(screen)
+    }
+
+    companion object {
+        const val EXTRA_SECTION = "section"
+
+        fun open(ctx: Context, section: String? = null) {
+            val i = Intent(ctx, CenterActivity::class.java)
+            if (section != null) i.putExtra(EXTRA_SECTION, section)
+            if (ctx !is android.app.Activity) i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            ctx.startActivity(i)
+        }
+    }
+}
