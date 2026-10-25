@@ -47,6 +47,13 @@
             android:theme="@style/Theme.Elevate" />
 
         <activity
+            android:name=".center.ui.CenterActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Elevate"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
             android:name=".ui.onboarding.OnboardingActivity"
             android:exported="false"
             android:theme="@style/Theme.Elevate" />
