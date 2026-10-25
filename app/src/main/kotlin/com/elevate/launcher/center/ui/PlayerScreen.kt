@@ -281,12 +281,14 @@ class PlayerScreen(host: CenterActivity, private val plan: Plan, resume: ResumeS
             SessionEx(it.key, it.ex.name, if (st == "done" || st == "skipped") st else "not_reached")
         }
 
+    /** Reached the end with at least half of the exercises actually done. Mostly-skipped sessions are saved as "ended early". */
+    private fun completedEnough(list: List<SessionEx>): Boolean = list.isNotEmpty() && list.count { it.state == "done" } * 2 >= list.size
+
     private fun finishWorkout() {
         phase = Phase.FINISH
         stopTimer()
         val list = exerciseList()
-        val anyDone = list.any { it.state == "done" }
-        val status = if (anyDone) "completed" else "ended"
+        val status = if (completedEnough(list)) "completed" else "ended"
         savedId = WorkoutRepo.saveSession(plan.key, plan.name, plan.category, startedMs, System.currentTimeMillis(), status, list)
         WorkoutRepo.clearResume()
         render()
@@ -469,8 +471,13 @@ class PlayerScreen(host: CenterActivity, private val plan: Plan, resume: ResumeS
         val skipped = list.count { it.state == "skipped" }
         val minutes = Math.max(1, ((System.currentTimeMillis() - startedMs) / 60000L).toInt())
         bodyBox.gravity = Gravity.NO_GRAVITY
-        bodyBox.addView(UiKit.text(host, if (done > 0) "Workout complete" else "Session saved", 26f, Palette.text, true), lp(MATCH, WRAP).apply { bottomMargin = host.dp(6) })
-        bodyBox.para("${plan.name} is saved in your history.", sp = 14f)
+        val enough = completedEnough(list)
+        bodyBox.addView(UiKit.text(host, if (enough) "Workout complete" else "Session saved", 26f, Palette.text, true), lp(MATCH, WRAP).apply { bottomMargin = host.dp(6) })
+        bodyBox.para(
+            if (enough) "${plan.name} is saved in your history."
+            else "Most exercises were skipped, so this is saved as ended early and does not count as a completed workout.",
+            sp = 14f
+        )
         bodyBox.card {
             statRow(listOf("$minutes min" to "Time", done.toString() to "Done", skipped.toString() to "Skipped"))
             para("These numbers come straight from what you tapped during this session.", sp = 12f, bottom = 0)

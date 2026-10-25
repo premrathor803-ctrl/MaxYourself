@@ -61,16 +61,21 @@ tap_label() {
   fi
 }
 
+# uiautomator cannot dump a screen with a running timer, so timer screens are tapped by position (per mille of the screen)
+SIZE=$(adb shell wm size < /dev/null | grep -oE '[0-9]+x[0-9]+' | tail -1)
+SW=${SIZE%x*}; SH=${SIZE#*x}
+tap_xy() { adb shell input tap $(( SW * $1 / 1000 )) $(( SH * $2 / 1000 )) < /dev/null >> out/starts.txt 2>&1; echo "tapped $1,$2 of ${SW}x${SH}" >> out/starts.txt; }
+
 adb shell am start -W -n "$PKG/.center.ui.CenterActivity" --es section player:beginner_full_a < /dev/null >> out/starts.txt 2>&1
 sleep 3
 shot c1-player-intro
 tap_label "Start"
 sleep 3
 shot c2-player-work
-tap_label "Done early"
+tap_xy 735 837
 sleep 2
 shot c3-player-rest
-tap_label "Skip rest"
+tap_xy 500 901
 sleep 2
 shot c4-player-intro2
 tap_label "End"
