@@ -8,6 +8,7 @@ import android.os.SystemClock
 import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
+import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
@@ -113,7 +114,7 @@ class PlayerScreen(host: CenterActivity, private val plan: Plan, resume: ResumeS
         val sv = ScrollView(host)
         bodyBox = host.vbox()
         bodyBox.setPadding(host.dp(16), host.dp(8), host.dp(16), host.dp(16))
-        sv.addView(bodyBox, ScrollView.LayoutParams(MATCH, WRAP))
+        sv.addView(bodyBox, FrameLayout.LayoutParams(MATCH, WRAP))
         root.addView(sv, lp(MATCH, 0, 1f))
 
         controls = host.vbox()
