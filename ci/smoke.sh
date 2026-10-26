@@ -43,7 +43,7 @@ try:
 except Exception:
     sys.exit(0)
 for n in root.iter('node'):
-    if n.get('text') == t:
+    if (n.get('text') or '').strip().lower() == t.strip().lower():
         m = re.findall(r'\d+', n.get('bounds') or '')
         if len(m) == 4:
             print((int(m[0]) + int(m[2])) // 2, (int(m[1]) + int(m[3])) // 2)
