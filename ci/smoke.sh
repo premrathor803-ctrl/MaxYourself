@@ -32,8 +32,8 @@ done < ci/activities.txt
 
 # ---- Center interaction checks (uses uiautomator to find buttons by their text)
 tap_text() {
-  adb shell uiautomator dump /sdcard/ui.xml < /dev/null > /dev/null 2>&1
-  adb pull /sdcard/ui.xml out/ui.xml > /dev/null 2>&1
+  timeout 45 adb shell uiautomator dump /sdcard/ui.xml < /dev/null > /dev/null 2>&1
+  timeout 45 adb pull /sdcard/ui.xml out/ui.xml > /dev/null 2>&1
   python3 - "$1" <<'PY'
 import re, sys
 import xml.etree.ElementTree as ET
@@ -54,7 +54,7 @@ tap_label() {
   local xy
   xy=$(tap_text "$1")
   if [ -n "$xy" ]; then
-    adb shell input tap $xy < /dev/null >> out/starts.txt 2>&1
+    timeout 45 adb shell input tap $xy < /dev/null >> out/starts.txt 2>&1
     echo "tapped '$1' at $xy" >> out/starts.txt
   else
     echo "could not find '$1' on screen" >> out/starts.txt
@@ -62,11 +62,11 @@ tap_label() {
 }
 
 # uiautomator cannot dump a screen with a running timer, so timer screens are tapped by position (per mille of the screen)
-SIZE=$(adb shell wm size < /dev/null | grep -oE '[0-9]+x[0-9]+' | tail -1)
+SIZE=$(timeout 45 adb shell wm size < /dev/null | grep -oE '[0-9]+x[0-9]+' | tail -1)
 SW=${SIZE%x*}; SH=${SIZE#*x}
-tap_xy() { adb shell input tap $(( SW * $1 / 1000 )) $(( SH * $2 / 1000 )) < /dev/null >> out/starts.txt 2>&1; echo "tapped $1,$2 of ${SW}x${SH}" >> out/starts.txt; }
+tap_xy() { timeout 45 adb shell input tap $(( SW * $1 / 1000 )) $(( SH * $2 / 1000 )) < /dev/null >> out/starts.txt 2>&1; echo "tapped $1,$2 of ${SW}x${SH}" >> out/starts.txt; }
 
-adb shell am start -W -n "$PKG/.center.ui.CenterActivity" --es section player:beginner_full_a < /dev/null >> out/starts.txt 2>&1
+timeout 45 adb shell am start -W -n "$PKG/.center.ui.CenterActivity" --es section player:beginner_full_a < /dev/null >> out/starts.txt 2>&1
 sleep 3
 shot c1-player-intro
 tap_label "Start"
@@ -84,54 +84,54 @@ shot c5-player-end-dialog
 tap_label "Save what I did and finish"
 sleep 3
 shot c6-after-save
-adb shell am start -W -n "$PKG/.center.ui.CenterActivity" --es section history < /dev/null >> out/starts.txt 2>&1
+timeout 45 adb shell am start -W -n "$PKG/.center.ui.CenterActivity" --es section history < /dev/null >> out/starts.txt 2>&1
 sleep 3
 shot c7-history-after-save
-adb shell am start -W -n "$PKG/.center.ui.CenterActivity" < /dev/null >> out/starts.txt 2>&1
+timeout 45 adb shell am start -W -n "$PKG/.center.ui.CenterActivity" < /dev/null >> out/starts.txt 2>&1
 sleep 3
 tap_label "Drink water"
 sleep 3
 shot c8-habit-detail
 
 # Make our launcher the HOME app (best effort) and press Home, to test the HOME flow
-adb shell cmd package set-home-activity "$PKG/$(grep -m1 '^home ' ci/activities.txt | awk '{print $2}')" >> out/starts.txt 2>&1 || true
-adb shell input keyevent KEYCODE_HOME
+timeout 45 adb shell cmd package set-home-activity "$PKG/$(grep -m1 '^home ' ci/activities.txt | awk '{print $2}')" >> out/starts.txt 2>&1 || true
+timeout 45 adb shell input keyevent KEYCODE_HOME
 sleep 3
 shot home-after-keyhome
 
 # ---- gesture checks on the home screen (drag & drop, folder, edit mode, long-press menu)
-adb shell am start -W -n "$PKG/.ui.home.HomeActivity" --ez ci_skip_onboarding true --ei ci_page 1 < /dev/null >> out/starts.txt 2>&1
+timeout 45 adb shell am start -W -n "$PKG/.ui.home.HomeActivity" --ez ci_skip_onboarding true --ei ci_page 1 < /dev/null >> out/starts.txt 2>&1
 sleep 2
 shot g0-home
 # drag Calendar onto Email: should create a folder
-adb shell input draganddrop 156 893 412 893 900 < /dev/null >> out/starts.txt 2>&1
+timeout 45 adb shell input draganddrop 156 893 412 893 900 < /dev/null >> out/starts.txt 2>&1
 sleep 2
 shot g1-after-drag-folder
-adb shell am start -W -n "$PKG/.ui.home.HomeActivity" --ez ci_folder true < /dev/null >> out/starts.txt 2>&1
+timeout 45 adb shell am start -W -n "$PKG/.ui.home.HomeActivity" --ez ci_folder true < /dev/null >> out/starts.txt 2>&1
 sleep 2
 shot g2-folder-dialog
-adb shell input keyevent KEYCODE_BACK < /dev/null
+timeout 45 adb shell input keyevent KEYCODE_BACK < /dev/null
 sleep 1
-adb shell am start -W -n "$PKG/.ui.home.HomeActivity" --ez ci_edit true < /dev/null >> out/starts.txt 2>&1
+timeout 45 adb shell am start -W -n "$PKG/.ui.home.HomeActivity" --ez ci_edit true < /dev/null >> out/starts.txt 2>&1
 sleep 2
 shot g3-edit-mode
-adb shell am start -W -n "$PKG/.ui.home.HomeActivity" --ez ci_exit_edit true < /dev/null >> out/starts.txt 2>&1
+timeout 45 adb shell am start -W -n "$PKG/.ui.home.HomeActivity" --ez ci_exit_edit true < /dev/null >> out/starts.txt 2>&1
 sleep 1
 # long press (no move) on Settings icon: quick menu
-adb shell input swipe 412 630 412 630 1200 < /dev/null >> out/starts.txt 2>&1
+timeout 45 adb shell input swipe 412 630 412 630 1200 < /dev/null >> out/starts.txt 2>&1
 sleep 1
 shot g4-long-press-menu
-adb shell input keyevent KEYCODE_BACK < /dev/null
+timeout 45 adb shell input keyevent KEYCODE_BACK < /dev/null
 sleep 1
 # drag Settings to the dock area's neighbour page cell (empty cell on same page)
-adb shell input draganddrop 412 630 668 1130 900 < /dev/null >> out/starts.txt 2>&1
+timeout 45 adb shell input draganddrop 412 630 668 1130 900 < /dev/null >> out/starts.txt 2>&1
 sleep 2
 shot g5-after-move
 
 # ---- privacy checks: calculator rejects a wrong code, the private list cannot be opened directly, the right code opens it
 dump_keys() {
-  adb shell uiautomator dump /sdcard/ui.xml < /dev/null > /dev/null 2>&1
-  adb pull /sdcard/ui.xml out/ui.xml > /dev/null 2>&1
+  timeout 45 adb shell uiautomator dump /sdcard/ui.xml < /dev/null > /dev/null 2>&1
+  timeout 45 adb pull /sdcard/ui.xml out/ui.xml > /dev/null 2>&1
   python3 - <<'PY' > out/keys.txt
 import re
 import xml.etree.ElementTree as ET
@@ -151,14 +151,14 @@ tap_key() {
   local line
   line=$(grep -m1 "^$1 " out/keys.txt)
   if [ -n "$line" ]; then
-    adb shell input tap $(echo "$line" | cut -d' ' -f2,3) < /dev/null >> out/starts.txt 2>&1
+    timeout 45 adb shell input tap $(echo "$line" | cut -d' ' -f2,3) < /dev/null >> out/starts.txt 2>&1
     sleep 0.4
   else
     echo "could not find key '$1'" >> out/starts.txt
   fi
 }
 
-adb shell am start -W -n "$PKG/.privacy.CalculatorActivity" --es ci_setcode 2580 --es ci_nosecure 1 < /dev/null >> out/starts.txt 2>&1
+timeout 45 adb shell am start -W -n "$PKG/.privacy.CalculatorActivity" --es ci_setcode 2580 --es ci_nosecure 1 < /dev/null >> out/starts.txt 2>&1
 sleep 3
 shot p1-calc
 dump_keys
@@ -167,10 +167,10 @@ sleep 1
 shot p2-calc-wrong-code
 tap_key clear
 # the private list must not open without an unlocked session
-adb shell am start -W -n "$PKG/.privacy.HiddenAppsActivity" --es ci_nosecure 1 < /dev/null >> out/starts.txt 2>&1
+timeout 45 adb shell am start -W -n "$PKG/.privacy.HiddenAppsActivity" --es ci_nosecure 1 < /dev/null >> out/starts.txt 2>&1
 sleep 3
 shot p3-direct-open-blocked
-adb shell am start -W -n "$PKG/.privacy.CalculatorActivity" --es ci_nosecure 1 < /dev/null >> out/starts.txt 2>&1
+timeout 45 adb shell am start -W -n "$PKG/.privacy.CalculatorActivity" --es ci_nosecure 1 < /dev/null >> out/starts.txt 2>&1
 sleep 3
 dump_keys
 for k in 2 5 8 0 equals; do tap_key $k; done
@@ -186,13 +186,13 @@ shot p6-hidden-list
 tap_label "Show again"
 sleep 2
 shot p7-after-show-again
-adb shell input keyevent KEYCODE_BACK < /dev/null
+timeout 45 adb shell input keyevent KEYCODE_BACK < /dev/null
 sleep 1
-adb shell am start -W -n "$PKG/.privacy.PrivacyActivity" < /dev/null >> out/starts.txt 2>&1
+timeout 45 adb shell am start -W -n "$PKG/.privacy.PrivacyActivity" < /dev/null >> out/starts.txt 2>&1
 sleep 3
 shot p8-privacy-settings
 # icon pack picker (no packs are installed on the emulator, so it should say so instead of failing)
-adb shell am start -W -n "$PKG/.ui.settings.SettingsActivity" --ez ci_skip_onboarding true < /dev/null >> out/starts.txt 2>&1
+timeout 45 adb shell am start -W -n "$PKG/.ui.settings.SettingsActivity" --ez ci_skip_onboarding true < /dev/null >> out/starts.txt 2>&1
 sleep 3
 tap_label "Icon pack"
 sleep 2
