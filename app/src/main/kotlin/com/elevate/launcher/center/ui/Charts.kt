@@ -48,7 +48,8 @@ class BarChart(ctx: Context) : View(ctx) {
         val chartH = height - topPad - botPad
         val slot = w / n
         val bw = Math.min(slot * 0.62f, context.dpf(34f))
-        textPaint.textSize = context.dpf(11f)
+        val narrow = slot < context.dpf(30f)
+        textPaint.textSize = context.dpf(if (narrow) 9f else 11f)
         basePaint.color = Palette.divider
         c.drawRect(0f, topPad + chartH, w, topPad + chartH + 2f, basePaint)
         for (i in 0 until n) {
@@ -60,7 +61,8 @@ class BarChart(ctx: Context) : View(ctx) {
                 val r = RectF(cx - bw / 2f, topPad + chartH - h, cx + bw / 2f, topPad + chartH)
                 c.drawRoundRect(r, context.dpf(4f), context.dpf(4f), barPaint)
                 textPaint.color = Palette.text
-                c.drawText(fmtNum(v.toDouble()), cx, topPad + chartH - h - context.dpf(4f), textPaint)
+                val shown = if (narrow) Math.round(v).toString() else fmtNum(v.toDouble())
+                c.drawText(shown, cx, topPad + chartH - h - context.dpf(4f), textPaint)
             }
             val lab = labels.getOrNull(i) ?: ""
             if (lab.isNotEmpty()) {
@@ -99,7 +101,6 @@ class LineChart(ctx: Context) : View(ctx) {
 
     override fun onDraw(c: Canvas) {
         if (ys.isEmpty()) return
-        val left = context.dpf(40f)
         val right = width - context.dpf(10f)
         val top = context.dpf(14f)
         val bottom = height - context.dpf(26f)
@@ -108,6 +109,9 @@ class LineChart(ctx: Context) : View(ctx) {
         val pad = Math.max(0.5f, (maxY0 - minY0) * 0.2f)
         val minY = minY0 - pad
         val maxY = maxY0 + pad
+        txt.textSize = context.dpf(11f)
+        val axisW = Math.max(txt.measureText(fmtAxis(maxY)), txt.measureText(fmtAxis(minY)))
+        val left = axisW + context.dpf(10f)
         val minX = xs.first()
         val spanX = Math.max(1f, xs.last() - minX)
         fun px(x: Float) = if (xs.size == 1) (left + right) / 2f else left + (x - minX) / spanX * (right - left)

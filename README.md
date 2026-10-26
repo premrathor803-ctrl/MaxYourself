@@ -41,7 +41,7 @@ Uninstall V1 once, then install V2. Later builds update normally.
 
 **Icon packs**
 - Reads packs made for ADW / Nova style launchers, applies them to apps the pack covers
-- Per-app icon override (long-press an app > Change icon)
+- Per-app icon override (long-press an app on the home screen or in the drawer > Change icon)
 
 ## Honest limits
 

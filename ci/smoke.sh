@@ -198,6 +198,20 @@ tap_label "Icon pack"
 sleep 2
 shot i1-icon-pack-none
 
+# Dark mode pass: the app follows the phone's theme by default
+timeout 45 adb shell cmd uimode night yes < /dev/null >> out/starts.txt 2>&1
+sleep 3
+while read -r name cls extras; do
+  [ -z "${name:-}" ] && continue
+  case "$name" in \#*) continue;; esac
+  echo "== $name ($cls)" >> out/starts.txt
+  timeout 45 adb shell am start -W -n "$PKG/$cls" --ez ci_skip_onboarding true $extras >> out/starts.txt 2>&1 < /dev/null
+  sleep 4
+  shot "$name"
+done < ci/dark.txt
+timeout 45 adb shell cmd uimode night no < /dev/null >> out/starts.txt 2>&1
+sleep 2
+
 # Random UI events inside our package
 adb shell monkey -p "$PKG" --throttle 150 -s 42 --pct-syskeys 0 -v 700 > out/monkey.txt 2>&1 || true
 sleep 2

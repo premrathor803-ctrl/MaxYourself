@@ -135,7 +135,7 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
         packPref = action(look, "Icon pack", iconPackSummary()) {
             com.elevate.launcher.ui.IconChooser.pickPack(requireActivity()) { packPref?.summary = iconPackSummary() }
         }
-        action(look, "About icon packs", "Elevate reads packs made for ADW and Nova style launchers. Apps a pack does not cover keep their normal icon. Long-press an app in the drawer and choose Change icon to set one icon by hand. Support is checked against the common pack format, not against every pack.") { }
+        action(look, "About icon packs", "Elevate reads packs made for ADW and Nova style launchers. Apps a pack does not cover keep their normal icon. Long-press an app on the home screen or in the drawer and choose Change icon to set one icon by hand. Support is checked against the common pack format, not against every pack.") { }
         switch(look, "wallpaper", "Show wallpaper on home", "Turn off for a plain themed background.", true)
 
         // ---------------------------------------------------------------- home

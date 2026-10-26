@@ -350,7 +350,8 @@ class HomeActivity : BaseActivity(), DrawerHost {
             m.menu.add(0, 1, 0, "Rename")
             m.menu.add(0, 2, 1, "App info")
             m.menu.add(0, 3, 2, "Uninstall")
-            m.menu.add(0, 4, 3, "Remove from home")
+            m.menu.add(0, 7, 3, "Change icon")
+            m.menu.add(0, 4, 4, "Remove from home")
         } else if (item.isFolder) {
             m.menu.add(0, 5, 0, "Rename folder")
             m.menu.add(0, 4, 1, "Remove folder (apps stay installed)")
@@ -368,6 +369,11 @@ class HomeActivity : BaseActivity(), DrawerHost {
                 4 -> { HomeRepo.remove(item); refreshHome() }
                 5 -> Dialogs.prompt(this, "Folder name", item.label) { name -> HomeRepo.renameFolder(item, name); refreshHome() }
                 6 -> enterEdit()
+                7 -> {
+                    val entry = AppCatalog.get(item.key)
+                    if (entry == null) toast("This app is not installed")
+                    else com.elevate.launcher.ui.IconChooser.show(this, entry) { refreshHome(); drawer.refresh() }
+                }
             }
             true
         }

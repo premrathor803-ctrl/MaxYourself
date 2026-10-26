@@ -1,0 +1,13 @@
+# Same format as activities.txt. Opened with the phone set to dark mode.
+d-home .ui.home.HomeActivity
+d-home-p0 .ui.home.HomeActivity --ei ci_page 0
+d-home-drawer .ui.home.HomeActivity --ez ci_open_drawer true
+d-settings .ui.settings.SettingsActivity
+d-center .center.ui.CenterActivity
+d-center-habits .center.ui.CenterActivity --es section habits
+d-center-workouts .center.ui.CenterActivity --es section workouts
+d-center-height .center.ui.CenterActivity --es section height
+d-center-progress .center.ui.CenterActivity --es section progress
+d-center-article .center.ui.CenterActivity --es section article:sunscreen
+d-privacy .privacy.PrivacyActivity
+d-calculator .privacy.CalculatorActivity --es ci_nosecure 1
