@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
 import com.elevate.launcher.center.data.Center
 import com.elevate.launcher.core.Prefs
+import com.elevate.launcher.privacy.Auth
 import com.elevate.launcher.data.AppCatalog
 import com.elevate.launcher.data.Store
 import com.elevate.launcher.ui.IconLoader
@@ -25,6 +26,7 @@ class ElevateApp : Application() {
         applyNightMode()
         Store.init(this)
         Center.init(this)
+        Auth.init(this)
         AppCatalog.reload(this)
 
         val f = IntentFilter().apply {

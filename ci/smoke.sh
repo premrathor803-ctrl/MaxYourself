@@ -128,6 +128,76 @@ adb shell input draganddrop 412 630 668 1130 900 < /dev/null >> out/starts.txt 2
 sleep 2
 shot g5-after-move
 
+# ---- privacy checks: calculator rejects a wrong code, the private list cannot be opened directly, the right code opens it
+dump_keys() {
+  adb shell uiautomator dump /sdcard/ui.xml < /dev/null > /dev/null 2>&1
+  adb pull /sdcard/ui.xml out/ui.xml > /dev/null 2>&1
+  python3 - <<'PY' > out/keys.txt
+import re
+import xml.etree.ElementTree as ET
+try:
+    root = ET.parse('out/ui.xml').getroot()
+except Exception:
+    raise SystemExit(0)
+for n in root.iter('node'):
+    d = n.get('content-desc')
+    if d:
+        m = re.findall(r'\d+', n.get('bounds') or '')
+        if len(m) == 4:
+            print(d.replace(' ', '_'), (int(m[0]) + int(m[2])) // 2, (int(m[1]) + int(m[3])) // 2)
+PY
+}
+tap_key() {
+  local line
+  line=$(grep -m1 "^$1 " out/keys.txt)
+  if [ -n "$line" ]; then
+    adb shell input tap $(echo "$line" | cut -d' ' -f2,3) < /dev/null >> out/starts.txt 2>&1
+    sleep 0.4
+  else
+    echo "could not find key '$1'" >> out/starts.txt
+  fi
+}
+
+adb shell am start -W -n "$PKG/.privacy.CalculatorActivity" --es ci_setcode 2580 --es ci_nosecure 1 < /dev/null >> out/starts.txt 2>&1
+sleep 3
+shot p1-calc
+dump_keys
+for k in 1 2 3 4 equals; do tap_key $k; done
+sleep 1
+shot p2-calc-wrong-code
+tap_key clear
+# the private list must not open without an unlocked session
+adb shell am start -W -n "$PKG/.privacy.HiddenAppsActivity" --es ci_nosecure 1 < /dev/null >> out/starts.txt 2>&1
+sleep 3
+shot p3-direct-open-blocked
+adb shell am start -W -n "$PKG/.privacy.CalculatorActivity" --es ci_nosecure 1 < /dev/null >> out/starts.txt 2>&1
+sleep 3
+dump_keys
+for k in 2 5 8 0 equals; do tap_key $k; done
+sleep 3
+shot p4-hidden-apps-empty
+tap_label "Hide apps"
+sleep 2
+shot p5-hide-dialog
+tap_label "Settings"
+tap_label "Hide selected"
+sleep 2
+shot p6-hidden-list
+tap_label "Show again"
+sleep 2
+shot p7-after-show-again
+adb shell input keyevent KEYCODE_BACK < /dev/null
+sleep 1
+adb shell am start -W -n "$PKG/.privacy.PrivacyActivity" < /dev/null >> out/starts.txt 2>&1
+sleep 3
+shot p8-privacy-settings
+# icon pack picker (no packs are installed on the emulator, so it should say so instead of failing)
+adb shell am start -W -n "$PKG/.ui.settings.SettingsActivity" --ez ci_skip_onboarding true < /dev/null >> out/starts.txt 2>&1
+sleep 3
+tap_label "Icon pack"
+sleep 2
+shot i1-icon-pack-none
+
 # Random UI events inside our package
 adb shell monkey -p "$PKG" --throttle 150 -s 42 --pct-syskeys 0 -v 700 > out/monkey.txt 2>&1 || true
 sleep 2

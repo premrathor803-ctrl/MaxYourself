@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Elevate Launcher</string>
+    <string name="calculator_label">Calculator</string>
 </resources>

@@ -21,3 +21,4 @@ center-learn .center.ui.CenterActivity --es section learn
 center-article .center.ui.CenterActivity --es section article:sunscreen
 center-glossary .center.ui.CenterActivity --es section glossary
 center-settings .center.ui.CenterActivity --es section settings
+calculator .privacy.CalculatorActivity --es ci_nosecure 1

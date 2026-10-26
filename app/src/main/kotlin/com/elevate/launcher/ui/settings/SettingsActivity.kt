@@ -131,6 +131,11 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
             "system" to "Keep each app's own shape", "circle" to "Circle", "squircle" to "Squircle",
             "rounded" to "Rounded square", "square" to "Square"
         ))
+        var packPref: Preference? = null
+        packPref = action(look, "Icon pack", iconPackSummary()) {
+            com.elevate.launcher.ui.IconChooser.pickPack(requireActivity()) { packPref?.summary = iconPackSummary() }
+        }
+        action(look, "About icon packs", "Elevate reads packs made for ADW and Nova style launchers. Apps a pack does not cover keep their normal icon. Long-press an app in the drawer and choose Change icon to set one icon by hand. Support is checked against the common pack format, not against every pack.") { }
         switch(look, "wallpaper", "Show wallpaper on home", "Turn off for a plain themed background.", true)
 
         // ---------------------------------------------------------------- home
@@ -197,6 +202,12 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
         }
         action(def, "Do I have to?", "No. Elevate also works as a normal app. Setting it as default just makes the Home button open it.") { }
 
+        // ---------------------------------------------------------------- privacy
+        val priv = cat("Privacy")
+        action(priv, "Hidden apps and privacy", "Hide apps from Elevate, set an access code and add a Calculator icon. Hiding only affects Elevate, not Android.") {
+            startActivity(android.content.Intent(requireContext(), com.elevate.launcher.privacy.PrivacyActivity::class.java))
+        }
+
         // ---------------------------------------------------------------- data
         val data = cat("Your data")
         action(data, "Where is my data?", "Everything stays on this phone. Elevate has no account and does not send your data anywhere.") { }
@@ -211,6 +222,16 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
         val about = cat("About")
         val ver = try { requireContext().packageManager.getPackageInfo(requireContext().packageName, 0).versionName } catch (e: Exception) { "" }
         action(about, "Elevate Launcher", "Version $ver  •  ${Perf.label}") { }
+    }
+
+    private fun iconPackSummary(): String {
+        val ctx = requireContext()
+        val pack = Prefs.iconPack
+        return when {
+            pack.isEmpty() -> "None: each app's own icon"
+            !com.elevate.launcher.ui.IconPacks.installed(ctx, pack) -> "Not installed any more. Normal icons are used."
+            else -> com.elevate.launcher.ui.IconPacks.labelOf(ctx, pack)
+        }
     }
 
     private fun defaultSummary(): String =

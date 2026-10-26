@@ -10,6 +10,11 @@
             <action android:name="android.intent.action.MAIN" />
             <category android:name="android.intent.category.LAUNCHER" />
         </intent>
+        <!-- Icon packs (ADW / Nova / Apex / GO style) -->
+        <intent><action android:name="org.adw.launcher.THEMES" /></intent>
+        <intent><action android:name="com.novalauncher.THEME" /></intent>
+        <intent><action android:name="com.anddoes.launcher.THEME" /></intent>
+        <intent><action android:name="com.gau.go.launcherex.theme" /></intent>
     </queries>
 
     <application
@@ -52,6 +57,39 @@
             android:screenOrientation="portrait"
             android:theme="@style/Theme.Elevate"
             android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".privacy.CalculatorActivity"
+            android:exported="false"
+            android:excludeFromRecents="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Elevate" />
+
+        <!-- A separate "Calculator" icon. Off by default; switched on from Hidden apps and privacy. -->
+        <activity-alias
+            android:name=".CalculatorAlias"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@drawable/ic_calculator"
+            android:label="@string/calculator_label"
+            android:roundIcon="@drawable/ic_calculator"
+            android:targetActivity=".privacy.CalculatorActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity
+            android:name=".privacy.HiddenAppsActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Elevate" />
+
+        <activity
+            android:name=".privacy.PrivacyActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Elevate" />
 
         <activity
             android:name=".ui.onboarding.OnboardingActivity"

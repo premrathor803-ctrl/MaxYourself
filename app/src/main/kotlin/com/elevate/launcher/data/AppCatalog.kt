@@ -73,7 +73,7 @@ object AppCatalog {
         val out = ArrayList<AppEntry>()
         for (ri in pm.queryIntentActivities(i, 0)) {
             val ai = ri.activityInfo ?: continue
-            if (ai.packageName == ctx.packageName) continue
+            if (ai.packageName == ctx.packageName && ai.name != com.elevate.launcher.privacy.Auth.ALIAS) continue
             val label = try { ri.loadLabel(pm)?.toString() } catch (e: Exception) { null }
             out.add(AppEntry(ai.packageName, ai.name, label?.takeIf { it.isNotBlank() } ?: ai.packageName, groupOf(ai.applicationInfo, ai.packageName)))
         }

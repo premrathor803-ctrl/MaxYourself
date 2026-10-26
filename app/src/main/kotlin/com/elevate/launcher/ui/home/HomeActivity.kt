@@ -394,6 +394,7 @@ class HomeActivity : BaseActivity(), DrawerHost {
         m.menu.add(0, 3, 2, "Add to dock")
         m.menu.add(0, 4, 3, "Rename")
         m.menu.add(0, 5, 4, "Hide in Elevate")
+        m.menu.add(0, 8, 5, "Change icon")
         m.menu.add(0, 6, 5, "App info")
         m.menu.add(0, 7, 6, "Uninstall")
         m.setOnMenuItemClickListener {
@@ -415,6 +416,7 @@ class HomeActivity : BaseActivity(), DrawerHost {
                     refreshHome(); drawer.refresh()
                     toast("Hidden in Elevate only. Open the drawer menu > Hidden apps to bring it back.")
                 }
+                8 -> com.elevate.launcher.ui.IconChooser.show(this, e) { refreshHome(); drawer.refresh() }
                 6 -> Launch.appInfo(this, e.pkg)
                 7 -> Launch.uninstall(this, e.pkg)
             }
@@ -427,7 +429,7 @@ class HomeActivity : BaseActivity(), DrawerHost {
 
     override fun openCenter(section: String?) { CenterActivity.open(this, section) }
 
-    override fun openHiddenApps() { toast("Hidden apps arrive in a later build") }
+    override fun openHiddenApps() { com.elevate.launcher.privacy.Auth.openHiddenApps(this) }
 
     override fun onDrawerState(open: Boolean) {
         // The drawer has a solid themed background, so status/nav icons must follow the theme while it is open.
