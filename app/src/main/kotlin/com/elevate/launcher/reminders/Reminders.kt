@@ -76,6 +76,11 @@ object Reminders {
         reschedule(ctx)
     }
 
+    /** After a backup was restored: make the alarm match the restored settings. */
+    fun afterRestore(ctx: Context) {
+        if (enabled) turnOn(ctx) else reschedule(ctx)
+    }
+
     fun turnOff(ctx: Context) {
         enabled = false
         reschedule(ctx)

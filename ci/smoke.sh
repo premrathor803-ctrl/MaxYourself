@@ -230,6 +230,7 @@ sleep 2
 shot after-monkey
 
 timeout 60 adb shell dumpsys notification --noredact < /dev/null > out/notifications.txt 2>&1 || true
+adb logcat -d -s ElevateCI:I > out/ci-log.txt 2>&1 || true
 adb logcat -d -b crash > out/crash.txt 2>&1 || true
 adb logcat -d -s AndroidRuntime:E ActivityManager:E > out/runtime.txt 2>&1 || true
 
@@ -253,6 +254,10 @@ adb logcat -d -s AndroidRuntime:E ActivityManager:E > out/runtime.txt 2>&1 || tr
   echo "Notifications posted by Elevate (a test reminder, and a habit reminder that was due about two minutes after the Reminders screen was opened):"
   echo '```'
   grep -E "pkg=com.elevate.launcher|android.title=" out/notifications.txt | grep -A1 "com.elevate.launcher" | head -20
+  echo '```'
+  echo "Self-test output from the app (ElevateCI log lines):"
+  echo '```'
+  head -c 4000 out/ci-log.txt
   echo '```'
   echo "Start results:"
   echo '```'

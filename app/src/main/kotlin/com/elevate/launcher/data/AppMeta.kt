@@ -30,6 +30,7 @@ object AppMeta {
     }
 
     fun get(key: String): Meta? = map[key]
+    fun snapshot(): Map<String, Meta> = HashMap(map)
     fun isHidden(key: String) = map[key]?.hidden == true
     fun hiddenKeys(): List<String> = map.filter { it.value.hidden }.keys.toList()
     fun isPinned(key: String) = (map[key]?.pinned ?: 0) > 0

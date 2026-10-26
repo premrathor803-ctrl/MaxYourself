@@ -96,6 +96,11 @@
             android:theme="@style/Theme.Elevate" />
 
         <activity
+            android:name=".backup.BackupActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Elevate" />
+
+        <activity
             android:name=".ui.onboarding.OnboardingActivity"
             android:exported="false"
             android:theme="@style/Theme.Elevate" />

@@ -122,7 +122,7 @@ class HomeActivity : BaseActivity(), DrawerHost {
     private fun prefsSignature(): String = listOf(
         Prefs.theme, Prefs.amoled, Prefs.accent, Prefs.wallpaper, Prefs.perf, Prefs.iconShape, Prefs.cols, Prefs.rows,
         Prefs.dockCount, Prefs.iconScale, Prefs.spacing, Prefs.showLabels, Prefs.showClock, Prefs.showSearch,
-        Prefs.drawerStyle, Prefs.drawerCols, Prefs.iconPack
+        Prefs.drawerStyle, Prefs.drawerCols, Prefs.iconPack, Prefs.getInt("restore_stamp", 0)
     ).joinToString("|")
 
     /** Hooks used by the automated emulator test; harmless otherwise. */

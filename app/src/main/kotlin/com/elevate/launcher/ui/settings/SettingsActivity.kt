@@ -211,6 +211,9 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
         // ---------------------------------------------------------------- data
         val data = cat("Your data")
         action(data, "Where is my data?", "Everything stays on this phone. Elevate has no account and does not send your data anywhere.") { }
+        action(data, "Backup and restore", "Save your home screen and settings to a file, or bring them back from one. Your access code and photos are never included.") {
+            startActivity(android.content.Intent(requireContext(), com.elevate.launcher.backup.BackupActivity::class.java))
+        }
         action(data, "Center data and settings", "Habits, workouts, goals and logs. Delete any of them, or all of them.") {
             com.elevate.launcher.center.ui.CenterActivity.open(requireContext(), "settings")
         }
