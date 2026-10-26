@@ -1,8 +1,11 @@
 package com.elevate.launcher.center.ui
 
+import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
 import android.view.View
@@ -11,6 +14,8 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import com.elevate.launcher.center.content.Articles
 import com.elevate.launcher.center.content.Exercises
 import com.elevate.launcher.center.content.Plans
@@ -49,6 +54,21 @@ class CenterActivity : BaseActivity() {
     private lateinit var body: FrameLayout
     private var scroll: ScrollView? = null
     private var started = false
+    private var permCallback: ((Boolean) -> Unit)? = null
+    private val notifPerm = registerForActivityResult(ActivityResultContracts.RequestPermission()) { ok ->
+        val cb = permCallback
+        permCallback = null
+        cb?.invoke(ok)
+    }
+
+    /** Asks for the notification permission (Android 13 and newer) only when the person turns reminders on. */
+    fun askNotificationPermission(done: (Boolean) -> Unit) {
+        if (Build.VERSION.SDK_INT < 33 ||
+            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+        ) { done(true); return }
+        permCallback = done
+        notifPerm.launch(Manifest.permission.POST_NOTIFICATIONS)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -89,8 +109,10 @@ class CenterActivity : BaseActivity() {
         })
 
         stack.add(DashboardScreen(this))
-        val section = intent.getStringExtra(EXTRA_SECTION)
+        com.elevate.launcher.data.Io.work { com.elevate.launcher.reminders.Reminders.reschedule(applicationContext) }
         if (intent.getBooleanExtra("ci_seed", false)) CenterSeed.run()
+        ciReminderTest()
+        val section = intent.getStringExtra(EXTRA_SECTION)
         if (section != null && section != "home") openSection(section, false)
         show()
         started = true
@@ -180,6 +202,26 @@ class CenterActivity : BaseActivity() {
         s.onShow()
     }
 
+    /** Test hook for the automated emulator run: turns reminders on and sets one habit to remind a minute or two from now. */
+    private fun ciReminderTest() {
+        val mins = intent.getIntExtra("ci_reminder_in", 0)
+        if (mins <= 0) return
+        var h = com.elevate.launcher.center.data.HabitRepo.all().firstOrNull()
+        if (h == null) {
+            val id = com.elevate.launcher.center.data.HabitRepo.insert(
+                com.elevate.launcher.center.data.Habit(0, "Reminder test habit", "", "General", "anytime", "daily", 127,
+                    com.elevate.launcher.center.data.Days.today(), "", 0)
+            )
+            h = com.elevate.launcher.center.data.HabitRepo.get(id)
+        }
+        if (h == null) return
+        val c = java.util.Calendar.getInstance()
+        c.add(java.util.Calendar.MINUTE, mins)
+        h.remind = String.format(java.util.Locale.US, "%02d:%02d", c.get(java.util.Calendar.HOUR_OF_DAY), c.get(java.util.Calendar.MINUTE))
+        com.elevate.launcher.center.data.HabitRepo.update(h)
+        com.elevate.launcher.reminders.Reminders.turnOn(this)
+    }
+
     /**
      * Opens a named section on top of the dashboard. Understands "habits", "workouts", "grooming", "posture",
      * "goals", "progress", "learn", "settings", "height", "sleep" and deep links "article:key", "exercise:key", "plan:key".
@@ -200,6 +242,7 @@ class CenterActivity : BaseActivity() {
             section == "history" -> HistoryScreen(this)
             section == "glossary" -> GlossaryScreen(this)
             section == "care" -> CareLogScreen(this)
+            section == "reminders" -> RemindersScreen(this)
             section.startsWith("article:") -> Articles.get(section.removePrefix("article:"))?.let { ArticleScreen(this, it) }
             section.startsWith("exercise:") -> Exercises.get(section.removePrefix("exercise:"))?.let { ExerciseDetailScreen(this, it) }
             section.startsWith("player:") -> Plans.get(section.removePrefix("player:"))?.let { PlayerScreen(this, it, null) }

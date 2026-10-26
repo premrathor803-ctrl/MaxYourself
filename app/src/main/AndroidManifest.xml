@@ -4,6 +4,10 @@
     <!-- Normal permission: lets a swipe gesture pull down the notification panel. -->
     <uses-permission android:name="android.permission.EXPAND_STATUS_BAR" />
 
+    <!-- Only used if the person turns reminders on. The Android 13+ prompt is shown at that moment, never at first launch. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
     <!-- See launchable apps without the broad QUERY_ALL_PACKAGES permission -->
     <queries>
         <intent>
@@ -95,6 +99,21 @@
             android:name=".ui.onboarding.OnboardingActivity"
             android:exported="false"
             android:theme="@style/Theme.Elevate" />
+
+        <receiver
+            android:name=".reminders.ReminderReceiver"
+            android:exported="false" />
+
+        <receiver
+            android:name=".reminders.BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+            </intent-filter>
+        </receiver>
 
     </application>
 </manifest>

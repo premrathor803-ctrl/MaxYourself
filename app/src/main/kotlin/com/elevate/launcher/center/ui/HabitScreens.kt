@@ -159,7 +159,7 @@ class HabitsScreen(host: CenterActivity) : Screen(host) {
             col.heading("Archived")
             for (h in archived) col.tapCard(h.name, "Archived. History is kept.", "Open") { host.push(HabitDetailScreen(host, h.id)) }
         }
-        col.noteCard("Your habits and history stay on this phone. This version has no reminders, so check the Center when you pick up your phone.")
+        col.noteCard("Your habits and history stay on this phone. Reminders are optional: turn them on in Center settings, then give a habit a time.")
         return col
     }
 }
@@ -282,6 +282,7 @@ class HabitFormScreen(host: CenterActivity, private val existing: Habit?) : Scre
     private var freq = existing?.freq ?: "daily"
     private var mask = existing?.days ?: 0b0011111
     private var method = existing?.method ?: 0
+    private var remind = existing?.remind ?: ""
 
     override fun build(): View {
         val col = host.vbox()
@@ -318,6 +319,26 @@ class HabitFormScreen(host: CenterActivity, private val existing: Habit?) : Scre
         val target = host.field("e.g. 10 min or 4 glasses", existing?.target ?: "")
         col.addView(target, lp(MATCH, WRAP))
 
+        col.fieldLabel("Reminder (optional)")
+        var remRow: LinearLayout? = null
+        remRow = col.pickRow("Remind me at", if (remind.isEmpty()) "No reminder" else clockText(remind)) {
+            Dialogs.list(host, "Reminder", listOf("Set a time", "No reminder")) { i ->
+                if (i == 0) {
+                    host.pickTime(if (remind.isEmpty()) "08:00" else remind) { t ->
+                        remind = t
+                        (remRow?.getChildAt(1) as? TextView)?.text = clockText(t) + "  ›"
+                    }
+                } else {
+                    remind = ""
+                    (remRow?.getChildAt(1) as? TextView)?.text = "No reminder  ›"
+                }
+            }
+        }
+        col.para(
+            if (com.elevate.launcher.reminders.Reminders.enabled) "Shown only on days this habit is scheduled."
+            else "Reminders are off. Turn them on in Center settings for this to work.", sp = 12f
+        )
+
         col.fieldLabel("How it gets ticked")
         col.addView(host.chips(listOf("0" to "I tick it", "1" to "From workouts"), method.toString()) { method = it.toInt() }, lp(MATCH, WRAP))
         col.gap(4)
@@ -330,12 +351,13 @@ class HabitFormScreen(host: CenterActivity, private val existing: Habit?) : Scre
             if (freq == "custom" && mask == 0) { host.toast("Pick at least one day"); return@actionButton }
             val e = existing
             if (e == null) {
-                HabitRepo.insert(Habit(0, n, descr.text.toString().trim(), category, slot, freq, mask, Days.today(), target.text.toString().trim(), method))
+                HabitRepo.insert(Habit(0, n, descr.text.toString().trim(), category, slot, freq, mask, Days.today(), target.text.toString().trim(), method, false, remind))
             } else {
                 e.name = n; e.descr = descr.text.toString().trim(); e.category = category; e.slot = slot
-                e.freq = freq; e.days = mask; e.target = target.text.toString().trim(); e.method = method
+                e.freq = freq; e.days = mask; e.target = target.text.toString().trim(); e.method = method; e.remind = remind
                 HabitRepo.update(e)
             }
+            com.elevate.launcher.reminders.Reminders.reschedule(host)
             host.pop()
         }
         return col

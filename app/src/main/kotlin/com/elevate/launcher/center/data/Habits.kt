@@ -13,7 +13,8 @@ class Habit(
     var startDay: String = Days.today(),
     var target: String = "",
     var method: Int = 0,                // 0 = I tick it off, 1 = counts automatically when I finish a workout
-    var archived: Boolean = false
+    var archived: Boolean = false,
+    var remind: String = ""             // "HH:mm" or "" for no reminder
 )
 
 /** The four states the spec asks to keep distinct, plus "pending" for today's not-yet-done items. */
@@ -30,10 +31,10 @@ object HabitRepo {
 
     private fun read(c: android.database.Cursor) = Habit(
         c.getLong(0), c.getString(1), c.getString(2), c.getString(3), c.getString(4), c.getString(5),
-        c.getInt(6), c.getString(7), c.getString(8), c.getInt(9), c.getInt(10) == 1
+        c.getInt(6), c.getString(7), c.getString(8), c.getInt(9), c.getInt(10) == 1, c.getString(11)
     )
 
-    private const val COLS = "id, name, descr, category, slot, freq, days, start_day, target, method, archived"
+    private const val COLS = "id, name, descr, category, slot, freq, days, start_day, target, method, archived, remind"
 
     fun all(includeArchived: Boolean = false): List<Habit> {
         val c = Center.db.rawQuery(
@@ -52,7 +53,7 @@ object HabitRepo {
     private fun values(h: Habit) = ContentValues().apply {
         put("name", h.name); put("descr", h.descr); put("category", h.category); put("slot", h.slot)
         put("freq", h.freq); put("days", h.days); put("start_day", h.startDay); put("target", h.target)
-        put("method", h.method); put("archived", if (h.archived) 1 else 0)
+        put("method", h.method); put("archived", if (h.archived) 1 else 0); put("remind", h.remind)
     }
 
     fun insert(h: Habit): Long {

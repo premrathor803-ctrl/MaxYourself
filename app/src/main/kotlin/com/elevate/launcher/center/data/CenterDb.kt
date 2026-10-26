@@ -9,13 +9,14 @@ import android.database.sqlite.SQLiteOpenHelper
  * The Center's own database. It is kept apart from the launcher layout database, so resetting the
  * home screen can never erase habits, workouts or measurements (and the reverse).
  */
-class CenterDb(ctx: Context) : SQLiteOpenHelper(ctx.applicationContext, "center.db", null, 1) {
+class CenterDb(ctx: Context) : SQLiteOpenHelper(ctx.applicationContext, "center.db", null, 2) {
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
             "CREATE TABLE habits (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, descr TEXT NOT NULL DEFAULT '', " +
                 "category TEXT NOT NULL DEFAULT 'General', slot TEXT NOT NULL DEFAULT 'anytime', freq TEXT NOT NULL DEFAULT 'daily', " +
                 "days INTEGER NOT NULL DEFAULT 127, start_day TEXT NOT NULL, target TEXT NOT NULL DEFAULT '', " +
-                "method INTEGER NOT NULL DEFAULT 0, archived INTEGER NOT NULL DEFAULT 0, created INTEGER NOT NULL DEFAULT 0)"
+                "method INTEGER NOT NULL DEFAULT 0, archived INTEGER NOT NULL DEFAULT 0, created INTEGER NOT NULL DEFAULT 0, " +
+                "remind TEXT NOT NULL DEFAULT '')"
         )
         db.execSQL(
             "CREATE TABLE habit_log (habit_id INTEGER NOT NULL, day TEXT NOT NULL, state INTEGER NOT NULL, " +
@@ -42,7 +43,10 @@ class CenterDb(ctx: Context) : SQLiteOpenHelper(ctx.applicationContext, "center.
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        // Future versions add columns/tables here. Existing records are never dropped.
+        // Existing records are never dropped; upgrades only add columns or tables.
+        if (oldVersion < 2) {
+            db.execSQL("ALTER TABLE habits ADD COLUMN remind TEXT NOT NULL DEFAULT ''")
+        }
     }
 }
 

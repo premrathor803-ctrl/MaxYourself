@@ -14,7 +14,9 @@ class CenterSettingsScreen(host: CenterActivity) : Screen(host) {
     override fun build(): View {
         val col = host.vbox()
 
-        col.heading("Workouts", 4)
+        col.tapCard("Reminders", if (com.elevate.launcher.reminders.Reminders.enabled) "On" else "Off. Optional nudges for habits and workouts.") { host.openSection("reminders") }
+
+        col.heading("Workouts", 10)
         col.trainingPrefsCard()
         col.card {
             cardTitle("Timers")
@@ -62,7 +64,7 @@ class CenterSettingsScreen(host: CenterActivity) : Screen(host) {
 
         col.heading("About", 12)
         col.noteCard("Included: habits, guided workouts, grooming and skincare guides, posture and mobility, optional height and sleep logs, goals, and progress charts. All content works offline.")
-        col.noteCard("Not included in this version: reminders and notifications, photo analysis, widgets and backup. The Center never rates your looks, and nothing in it promises to change your height or face shape.")
+        col.noteCard("Not included: any rating of your looks from photos. The Center never rates your looks, and nothing in it promises to change your height or face shape.")
         col.noteCard("General fitness and wellness information. It is not medical advice. If something worries you, talk to a doctor.")
         return col
     }

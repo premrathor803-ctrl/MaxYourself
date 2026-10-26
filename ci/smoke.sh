@@ -66,6 +66,18 @@ SIZE=$(timeout 45 adb shell wm size < /dev/null | grep -oE '[0-9]+x[0-9]+' | tai
 SW=${SIZE%x*}; SH=${SIZE#*x}
 tap_xy() { timeout 45 adb shell input tap $(( SW * $1 / 1000 )) $(( SH * $2 / 1000 )) < /dev/null >> out/starts.txt 2>&1; echo "tapped $1,$2 of ${SW}x${SH}" >> out/starts.txt; }
 
+# ---- reminders: turn them on with a habit due in about 2 minutes (checked at the end), look at the screen, send a test
+timeout 45 adb shell am start -W -n "$PKG/.center.ui.CenterActivity" --ei ci_reminder_in 2 --es section reminders < /dev/null >> out/starts.txt 2>&1
+sleep 3
+shot r1-reminders-on
+tap_label "Send a test reminder"
+sleep 2
+timeout 45 adb shell cmd statusbar expand-notifications < /dev/null >> out/starts.txt 2>&1
+sleep 2
+shot r2-notification-shade
+timeout 45 adb shell cmd statusbar collapse < /dev/null >> out/starts.txt 2>&1
+sleep 1
+
 timeout 45 adb shell am start -W -n "$PKG/.center.ui.CenterActivity" --es section player:beginner_full_a < /dev/null >> out/starts.txt 2>&1
 sleep 3
 shot c1-player-intro
@@ -217,6 +229,7 @@ adb shell monkey -p "$PKG" --throttle 150 -s 42 --pct-syskeys 0 -v 700 > out/mon
 sleep 2
 shot after-monkey
 
+timeout 60 adb shell dumpsys notification --noredact < /dev/null > out/notifications.txt 2>&1 || true
 adb logcat -d -b crash > out/crash.txt 2>&1 || true
 adb logcat -d -s AndroidRuntime:E ActivityManager:E > out/runtime.txt 2>&1 || true
 
@@ -236,6 +249,10 @@ adb logcat -d -s AndroidRuntime:E ActivityManager:E > out/runtime.txt 2>&1 || tr
   echo "AndroidRuntime errors:"
   echo '```'
   head -c 8000 out/runtime.txt
+  echo '```'
+  echo "Notifications posted by Elevate (a test reminder, and a habit reminder that was due about two minutes after the Reminders screen was opened):"
+  echo '```'
+  grep -E "pkg=com.elevate.launcher|android.title=" out/notifications.txt | grep -A1 "com.elevate.launcher" | head -20
   echo '```'
   echo "Start results:"
   echo '```'
