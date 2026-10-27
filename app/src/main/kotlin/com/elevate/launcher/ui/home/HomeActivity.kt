@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.view.GestureDetector
 import android.view.Gravity
 import android.view.MotionEvent
+import android.view.ScaleGestureDetector
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
@@ -47,6 +48,10 @@ import com.elevate.launcher.ui.drawer.DrawerHost
 import com.elevate.launcher.ui.drawer.DrawerView
 import com.elevate.launcher.ui.onboarding.OnboardingActivity
 import com.elevate.launcher.ui.settings.SettingsActivity
+import com.elevate.launcher.gaming.Gaming
+import com.elevate.launcher.gaming.GamingActivity
+import com.elevate.launcher.gestures.Flashlight
+import com.elevate.launcher.gestures.LockService
 import com.elevate.launcher.widgets.TodayWidget
 import com.elevate.launcher.widgets.WidgetController
 import com.elevate.launcher.widgets.WidgetsPageView
@@ -62,6 +67,7 @@ class HomeActivity : BaseActivity(), DrawerHost {
     private lateinit var content: LinearLayout
     private lateinit var clockBox: LinearLayout
     private lateinit var searchPill: TextView
+    private lateinit var gamingBanner: TextView
     private lateinit var pager: ViewPager2
     private lateinit var dots: LinearLayout
     private lateinit var dock: CellGrid
@@ -128,6 +134,7 @@ class HomeActivity : BaseActivity(), DrawerHost {
         AppCatalog.refreshIfStale(this)
         maybeSeed()
         refreshHome()
+        gamingBanner.visibility = if (Gaming.on) View.VISIBLE else View.GONE
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -158,7 +165,8 @@ class HomeActivity : BaseActivity(), DrawerHost {
         if (i.getBooleanExtra("ci_edit", false)) enterEdit()
         if (i.getBooleanExtra("ci_folder", false)) openFirstFolder()
         i.getStringExtra("ci_action")?.let { runAction(it) }
-        if (i.getBooleanExtra("ci_widgets_page", false)) { Prefs.widgetsPage = true; onWidgetsChanged(true) }
+        if (i.getBooleanExtra("ci_gaming_banner", false)) gamingBanner.visibility = if (Gaming.on) View.VISIBLE else View.GONE
+        if (i.getBooleanExtra("ci_widgets_page", false)) { if (drawer.isOpen) drawer.close(); Prefs.widgetsPage = true; onWidgetsChanged(true) }
         if (i.getBooleanExtra("ci_widget_picker", false)) widgets.showPicker()
         if (i.getBooleanExtra("ci_widget_today", false)) widgets.addProvider(ComponentName(this, TodayWidget::class.java))
     }
@@ -218,6 +226,16 @@ class HomeActivity : BaseActivity(), DrawerHost {
         }
         content.addView(searchPill, lp(MATCH, dp(46)).apply { leftMargin = dp(20); rightMargin = dp(20); topMargin = dp(6); bottomMargin = dp(4) })
         searchPill.visibility = if (Prefs.showSearch) View.VISIBLE else View.GONE
+
+        // shown only while Gaming mode is on, so it is always one tap to leave
+        gamingBanner = UiKit.text(this, "Gaming mode is on  ·  tap to open", 13f, Palette.onAccent, true).apply {
+            gravity = Gravity.CENTER
+            setPadding(dp(16), 0, dp(16), 0)
+            background = UiKit.rounded(Palette.accent, dpf(16f))
+            setOnClickListener { startActivity(Intent(this@HomeActivity, GamingActivity::class.java)) }
+            visibility = View.GONE
+        }
+        content.addView(gamingBanner, lp(WRAP, dp(32)).apply { gravity = Gravity.CENTER_HORIZONTAL; topMargin = dp(2); bottomMargin = dp(2) })
 
         // pages
         pager = ViewPager2(this).apply {
@@ -644,6 +662,39 @@ class HomeActivity : BaseActivity(), DrawerHost {
         })
     }
 
+    private var pinchTotal = 1f
+    private var pinched = false
+    private var twoActive = false
+    private var twoStartY = 0f
+
+    private val scaleDetector by lazy {
+        ScaleGestureDetector(this, object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
+            override fun onScaleBegin(d: ScaleGestureDetector): Boolean { pinchTotal = 1f; return true }
+            override fun onScale(d: ScaleGestureDetector): Boolean { pinchTotal *= d.scaleFactor; return true }
+            override fun onScaleEnd(d: ScaleGestureDetector) {
+                if (pinchTotal < 0.8f) { pinched = true; runAction(Prefs.gesturePinchIn) }
+                else if (pinchTotal > 1.25f) { pinched = true; runAction(Prefs.gesturePinchOut) }
+            }
+        })
+    }
+
+    /** Pinch in/out and two-finger swipe up/down. Each does nothing unless an action is chosen in Settings. */
+    private fun multiTouchGestures(ev: MotionEvent) {
+        scaleDetector.onTouchEvent(ev)
+        when (ev.actionMasked) {
+            MotionEvent.ACTION_DOWN -> { twoActive = false; pinched = false }
+            MotionEvent.ACTION_POINTER_DOWN -> if (ev.pointerCount == 2) {
+                twoActive = true
+                twoStartY = (ev.getY(0) + ev.getY(1)) / 2f
+            }
+            MotionEvent.ACTION_POINTER_UP -> if (twoActive && ev.pointerCount == 2) {
+                twoActive = false
+                val dy = (ev.getY(0) + ev.getY(1)) / 2f - twoStartY
+                if (!pinched && abs(dy) > dp(110)) runAction(if (dy < 0) Prefs.gestureTwoUp else Prefs.gestureTwoDown)
+            }
+        }
+    }
+
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
         if (!::drag.isInitialized) return super.dispatchTouchEvent(ev)
         if (ev.actionMasked == MotionEvent.ACTION_DOWN || ev.actionMasked == MotionEvent.ACTION_MOVE) {
@@ -660,7 +711,10 @@ class HomeActivity : BaseActivity(), DrawerHost {
             drag.onTouch(ev)
             return true
         }
-        if (!editing && !drawer.isOpen && pager.currentItem != 0 && !onWidgetsPage()) detector.onTouchEvent(ev)
+        if (!editing && !drawer.isOpen && pager.currentItem != 0 && !onWidgetsPage()) {
+            detector.onTouchEvent(ev)
+            multiTouchGestures(ev)
+        }
         return super.dispatchTouchEvent(ev)
     }
 
@@ -687,6 +741,10 @@ class HomeActivity : BaseActivity(), DrawerHost {
             a == "settings" -> openSettings()
             a == "menu" -> showHomeMenu()
             a == "edit" -> enterEdit()
+            a == "gaming" -> startActivity(Intent(this, GamingActivity::class.java))
+            a == "flashlight" -> Flashlight.toggle(this)
+            a == "hidden" -> openHiddenApps()
+            a == "lock" -> LockService.lock(this)
             a.startsWith("app:") -> {
                 val e = AppCatalog.get(a.removePrefix("app:"))
                 if (e != null) Launch.app(this, e.pkg, e.cls) else toast("That app is not installed")
@@ -699,6 +757,7 @@ class HomeActivity : BaseActivity(), DrawerHost {
         opts.add("Edit home screen")
         opts.add("Wallpaper")
         opts.add("Add widget")
+        opts.add(if (Gaming.on) "Leave Gaming mode" else "Gaming mode")
         opts.add("Launcher settings")
         val hasCenter = HomeRepo.items.any { it.kind == HomeRepo.KIND_CENTER }
         if (!hasCenter) opts.add("Add Center shortcut")
@@ -707,6 +766,7 @@ class HomeActivity : BaseActivity(), DrawerHost {
                 "Edit home screen" -> enterEdit()
                 "Wallpaper" -> Launch.wallpaperPicker(this)
                 "Add widget" -> widgets.showPicker()
+                "Gaming mode", "Leave Gaming mode" -> startActivity(Intent(this, GamingActivity::class.java))
                 "Launcher settings" -> openSettings()
                 "Add Center shortcut" -> {
                     val cap = Prefs.cols * Prefs.rows

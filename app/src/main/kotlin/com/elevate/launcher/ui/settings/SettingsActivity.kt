@@ -71,6 +71,10 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
             "settings" to "Launcher settings",
             "menu" to "Home screen menu",
             "edit" to "Edit home screen",
+            "gaming" to "Gaming mode",
+            "flashlight" to "Flashlight on/off",
+            "hidden" to "Hidden apps (asks for your code)",
+            "lock" to "Lock screen (needs a one-time setting)",
             "app" to "Open an app…"
         )
 
@@ -177,13 +181,23 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
             Triple("gesture_up", "Swipe up", "drawer"),
             Triple("gesture_down", "Swipe down", "notifications"),
             Triple("gesture_double", "Double tap on empty space", "none"),
-            Triple("gesture_long", "Long press on empty space", "menu")
+            Triple("gesture_long", "Long press on empty space", "menu"),
+            Triple("gesture_pinch_in", "Pinch in (two fingers together)", "none"),
+            Triple("gesture_pinch_out", "Pinch out (two fingers apart)", "none"),
+            Triple("gesture_two_up", "Two-finger swipe up", "none"),
+            Triple("gesture_two_down", "Two-finger swipe down", "none")
         )) {
             val current = Prefs.sp.getString(key, def) ?: def
             val p = action(gest, title, actionLabel(current)) { pref -> pickGesture(pref, key, title) }
             gestureLabels.add(p to key)
         }
-        action(gest, "Note", "Opening the notification panel from a launcher is blocked by some phone makers.") { }
+        action(gest, "Note", "Opening the notification panel from a launcher is blocked by some phone makers. Pinch and two-finger gestures work on the icon pages, not on the Center page or the widgets page.") { }
+
+        // ---------------------------------------------------------------- gaming
+        val gaming = cat("Gaming mode")
+        action(gaming, "Gaming mode", "Pause Elevate's reminders, keep your games together, optionally quiet notifications and get break nudges. It does not boost game speed.") {
+            startActivity(android.content.Intent(requireContext(), com.elevate.launcher.gaming.GamingActivity::class.java))
+        }
 
         // ---------------------------------------------------------------- performance
         val perf = cat("Performance")
@@ -261,6 +275,7 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
     }
 
     private fun resetSettings() {
+        if (com.elevate.launcher.gaming.Gaming.on) com.elevate.launcher.gaming.Gaming.stop(requireContext())
         val lc = Prefs.getInt("layout_cols", Prefs.cols)
         val lr = Prefs.getInt("layout_rows", Prefs.rows)
         val ld = Prefs.getInt("layout_dock", Prefs.dockCount)
@@ -274,6 +289,14 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
         IconLoader.clear()
         requireContext().toast("Settings reset")
         activity?.recreate()
+    }
+
+    override fun onViewCreated(view: android.view.View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        // used by the automated emulator test to look at a lower part of the list
+        if (activity?.intent?.getStringExtra("ci_scroll") == "gestures") {
+            view.post { gestureLabels.lastOrNull()?.let { scrollToPreference(it.first) } }
+        }
     }
 
     override fun onResume() {

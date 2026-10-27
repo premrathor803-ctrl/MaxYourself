@@ -46,6 +46,9 @@ abstract class PageActivity : BaseActivity() {
         render(col)
     }
 
+    /** True once the page has been built (onCreate has run). */
+    protected fun isBuilt(): Boolean = ::col.isInitialized
+
     fun rebuild() {
         val y = scroll.scrollY
         col.removeAllViews()

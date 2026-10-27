@@ -60,6 +60,10 @@ object Prefs {
     val gestureDown get() = s("gesture_down", "notifications")
     val gestureDouble get() = s("gesture_double", "none")
     val gestureLong get() = s("gesture_long", "menu")
+    val gesturePinchIn get() = s("gesture_pinch_in", "none")
+    val gesturePinchOut get() = s("gesture_pinch_out", "none")
+    val gestureTwoUp get() = s("gesture_two_up", "none")
+    val gestureTwoDown get() = s("gesture_two_down", "none")
 
     // ---- state
     var onboarded: Boolean

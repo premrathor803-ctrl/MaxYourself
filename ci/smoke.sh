@@ -90,8 +90,11 @@ timeout 45 adb shell input keyevent KEYCODE_BACK < /dev/null
 sleep 1
 timeout 45 adb shell am start -W -n "$PKG/.ui.home.HomeActivity" --ez ci_widget_today true < /dev/null >> out/starts.txt 2>&1
 sleep 5
-shot w3-today-widget-added
-timeout 45 adb shell dumpsys appwidget < /dev/null 2>&1 | grep -E "Provider|Widget|com.elevate" | head -20 > out/appwidget.txt || true
+shot w3-widget-allow-dialog
+tap_xy 807 572
+sleep 4
+shot w4-today-widget-on-page
+timeout 45 adb shell dumpsys appwidget < /dev/null 2>&1 | grep -E "provider|Widgets" | head -20 > out/appwidget.txt || true
 
 timeout 45 adb shell am start -W -n "$PKG/.center.ui.CenterActivity" --es section player:beginner_full_a < /dev/null >> out/starts.txt 2>&1
 sleep 3
@@ -245,6 +248,30 @@ sleep 2
 shot after-monkey
 
 timeout 60 adb shell dumpsys notification --noredact < /dev/null > out/notifications.txt 2>&1 || true
+
+# ---- gaming mode and the new gesture actions (after the notification dump, because Gaming mode pauses reminders)
+timeout 45 adb shell am start -W -n "$PKG/.gaming.GamingActivity" --ez ci_gaming_on true < /dev/null >> out/starts.txt 2>&1
+sleep 3
+shot gm1-gaming-on
+timeout 45 adb shell am start -W -n "$PKG/.ui.home.HomeActivity" --ez ci_skip_onboarding true --ei ci_page 1 < /dev/null >> out/starts.txt 2>&1
+sleep 3
+shot gm2-home-banner
+timeout 45 adb shell am start -W -n "$PKG/.gaming.GamingActivity" < /dev/null >> out/starts.txt 2>&1
+sleep 2
+tap_label "Leave Gaming mode"
+sleep 2
+shot gm3-gaming-off
+timeout 45 adb shell am start -W -n "$PKG/.ui.home.HomeActivity" --es ci_action lock < /dev/null >> out/starts.txt 2>&1
+sleep 2
+shot gm4-lock-gesture-dialog
+timeout 45 adb shell input keyevent KEYCODE_BACK < /dev/null
+timeout 45 adb shell am start -W -n "$PKG/.ui.home.HomeActivity" --es ci_action flashlight < /dev/null >> out/starts.txt 2>&1
+sleep 1
+shot gm5-flashlight-toast
+timeout 45 adb shell am start -W -n "$PKG/.ui.settings.SettingsActivity" --es ci_scroll gestures < /dev/null >> out/starts.txt 2>&1
+sleep 2
+shot gm6-settings-gestures
+
 adb logcat -d -s ElevateCI:I > out/ci-log.txt 2>&1 || true
 adb logcat -d -b crash > out/crash.txt 2>&1 || true
 adb logcat -d -s AndroidRuntime:E ActivityManager:E > out/runtime.txt 2>&1 || true

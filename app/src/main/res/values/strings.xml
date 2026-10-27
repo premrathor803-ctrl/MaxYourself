@@ -3,4 +3,7 @@
     <string name="calculator_label">Calculator</string>
     <string name="widget_today_label">Elevate Today</string>
     <string name="widget_today_desc">Habits done today and whether a workout is planned. Tap to open the Center.</string>
+    <string name="lock_service_label">Elevate screen lock</string>
+    <string name="lock_service_desc">Used only by the Lock screen gesture in Elevate Launcher. It does not read your screen or watch what you do.</string>
+    <string name="gaming_tile_label">Gaming mode</string>
 </resources>
