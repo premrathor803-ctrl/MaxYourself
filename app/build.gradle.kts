@@ -62,4 +62,6 @@ dependencies {
     implementation("androidx.fragment:fragment-ktx:1.8.1")
     implementation("androidx.viewpager2:viewpager2:1.1.0")
     implementation("androidx.preference:preference-ktx:1.2.1")
+    implementation("androidx.biometric:biometric:1.1.0")
+    implementation("androidx.exifinterface:exifinterface:1.3.7")
 }

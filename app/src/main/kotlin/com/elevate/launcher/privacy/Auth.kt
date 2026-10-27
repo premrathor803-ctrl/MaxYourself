@@ -72,9 +72,14 @@ object Auth {
     }
 
     fun clearCode(ctx: Context) {
-        prefs(ctx).edit().remove("salt").remove("hash").remove("iter").remove("len").remove("fails").remove("locked_until").apply()
+        prefs(ctx).edit().remove("salt").remove("hash").remove("iter").remove("len").remove("fails").remove("locked_until").remove("bio").apply()
         lock()
     }
+
+    // ------------------------------------------------------------ optional fingerprint / face
+    /** Fingerprint or face as a second way in. Only ever on while a code exists; the code stays the master key. */
+    fun bioOn(ctx: Context): Boolean = hasCode(ctx) && prefs(ctx).getBoolean("bio", false)
+    fun setBio(ctx: Context, v: Boolean) { prefs(ctx).edit().putBoolean("bio", v).apply() }
 
     /** Seconds left in a lock-out, or 0. */
     fun lockedSeconds(ctx: Context): Int {

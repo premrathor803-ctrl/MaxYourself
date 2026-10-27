@@ -20,6 +20,8 @@ import com.elevate.launcher.center.content.Articles
 import com.elevate.launcher.center.content.Exercises
 import com.elevate.launcher.center.content.Plans
 import com.elevate.launcher.center.data.Center
+import com.elevate.launcher.center.data.Days
+import com.elevate.launcher.center.data.PhotoRepo
 import com.elevate.launcher.core.BaseActivity
 import com.elevate.launcher.core.MATCH
 import com.elevate.launcher.core.Palette
@@ -59,6 +61,31 @@ class CenterActivity : BaseActivity() {
         val cb = permCallback
         permCallback = null
         cb?.invoke(ok)
+    }
+
+    private var photoCb: ((Boolean) -> Unit)? = null
+    private val takePic = registerForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
+        val cb = photoCb
+        photoCb = null
+        cb?.invoke(ok)
+    }
+    private var pickCb: ((android.net.Uri?) -> Unit)? = null
+    private val pickImg = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        val cb = pickCb
+        pickCb = null
+        cb?.invoke(uri)
+    }
+
+    /** Opens the camera app and saves the picture to [uri] (a FileProvider address). Throws if no camera app exists. */
+    fun takePicture(uri: android.net.Uri, done: (Boolean) -> Unit) {
+        photoCb = done
+        takePic.launch(uri)
+    }
+
+    /** Opens the system picture chooser. No storage permission is needed. */
+    fun pickImage(done: (android.net.Uri?) -> Unit) {
+        pickCb = done
+        pickImg.launch("image/*")
     }
 
     /** Asks for the notification permission (Android 13 and newer) only when the person turns reminders on. */
@@ -112,6 +139,7 @@ class CenterActivity : BaseActivity() {
         com.elevate.launcher.data.Io.work { com.elevate.launcher.reminders.Reminders.reschedule(applicationContext) }
         if (intent.getBooleanExtra("ci_seed", false)) CenterSeed.run()
         ciReminderTest()
+        ciPhotos()
         val section = intent.getStringExtra(EXTRA_SECTION)
         if (section != null && section != "home") openSection(section, false)
         show()
@@ -203,6 +231,22 @@ class CenterActivity : BaseActivity() {
         s.onShow()
     }
 
+    /** Test hook for the automated emulator run: puts three generated pictures in the journal (once). */
+    private fun ciPhotos() {
+        if (!intent.getBooleanExtra("ci_photo_import", false) || PhotoRepo.count() > 0) return
+        val specs = listOf(Triple("front", 0, 0xFF3B6EA8.toInt()), Triple("side", -9, 0xFF2E8B57.toInt()), Triple("posture", -21, 0xFFB5651D.toInt()))
+        for ((kind, back, colour) in specs) {
+            val bmp = android.graphics.Bitmap.createBitmap(480, 640, android.graphics.Bitmap.Config.ARGB_8888)
+            val cv = android.graphics.Canvas(bmp)
+            cv.drawColor(colour)
+            val p = android.graphics.Paint().apply { color = 0xFFFFFFFF.toInt(); textSize = 64f; isAntiAlias = true }
+            cv.drawText("TEST " + kind, 40f, 320f, p)
+            val bos = java.io.ByteArrayOutputStream()
+            bmp.compress(android.graphics.Bitmap.CompressFormat.JPEG, 90, bos)
+            PhotoRepo.saveFrom(this, java.io.ByteArrayInputStream(bos.toByteArray()), Days.add(Days.today(), back), kind, if (back == 0) "Generated test picture" else "")
+        }
+    }
+
     /** Test hook for the automated emulator run: turns reminders on and sets one habit to remind a minute or two from now. */
     private fun ciReminderTest() {
         val mins = intent.getIntExtra("ci_reminder_in", 0)
@@ -244,6 +288,10 @@ class CenterActivity : BaseActivity() {
             section == "glossary" -> GlossaryScreen(this)
             section == "care" -> CareLogScreen(this)
             section == "reminders" -> RemindersScreen(this)
+            section == "photos" -> PhotoJournalScreen(this)
+            section == "photo:first" -> PhotoRepo.all().firstOrNull()?.let { PhotoDetailScreen(this, it.id) }
+            section.startsWith("photo:") -> section.removePrefix("photo:").toLongOrNull()?.let { PhotoDetailScreen(this, it) }
+            section == "photocompare:first" -> PhotoRepo.all().let { l -> if (l.size >= 2) PhotoCompareScreen(this, l[l.size - 1].id, l[0].id) else null }
             section.startsWith("article:") -> Articles.get(section.removePrefix("article:"))?.let { ArticleScreen(this, it) }
             section.startsWith("exercise:") -> Exercises.get(section.removePrefix("exercise:"))?.let { ExerciseDetailScreen(this, it) }
             section.startsWith("player:") -> Plans.get(section.removePrefix("player:"))?.let { PlayerScreen(this, it, null) }

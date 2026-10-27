@@ -25,3 +25,8 @@ calculator .privacy.CalculatorActivity --es ci_nosecure 1
 center-reminders .center.ui.CenterActivity --es section reminders
 backup .backup.BackupActivity
 backup-selftest .backup.BackupActivity --ez ci_selftest true
+center-photos .center.ui.CenterActivity --ez ci_photo_import true --es ci_nosecure 1 --es section photos
+center-photo-detail .center.ui.CenterActivity --ez ci_photo_import true --es ci_nosecure 1 --es section photo:first
+center-photo-compare .center.ui.CenterActivity --ez ci_photo_import true --es ci_nosecure 1 --es section photocompare:first
+privacy .privacy.PrivacyActivity
+gaming .gaming.GamingActivity

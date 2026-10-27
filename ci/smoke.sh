@@ -253,7 +253,7 @@ timeout 60 adb shell dumpsys notification --noredact < /dev/null > out/notificat
 timeout 45 adb shell am start -W -n "$PKG/.gaming.GamingActivity" --ez ci_gaming_on true < /dev/null >> out/starts.txt 2>&1
 sleep 3
 shot gm1-gaming-on
-timeout 45 adb shell am start -W -n "$PKG/.ui.home.HomeActivity" --ez ci_skip_onboarding true --ei ci_page 1 < /dev/null >> out/starts.txt 2>&1
+timeout 45 adb shell am start -W -n "$PKG/.ui.home.HomeActivity" --ez ci_skip_onboarding true --ei ci_page 1 --ez ci_gaming_banner true < /dev/null >> out/starts.txt 2>&1
 sleep 3
 shot gm2-home-banner
 timeout 45 adb shell am start -W -n "$PKG/.gaming.GamingActivity" < /dev/null >> out/starts.txt 2>&1

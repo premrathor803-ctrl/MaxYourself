@@ -9,7 +9,7 @@ import android.database.sqlite.SQLiteOpenHelper
  * The Center's own database. It is kept apart from the launcher layout database, so resetting the
  * home screen can never erase habits, workouts or measurements (and the reverse).
  */
-class CenterDb(ctx: Context) : SQLiteOpenHelper(ctx.applicationContext, "center.db", null, 2) {
+class CenterDb(ctx: Context) : SQLiteOpenHelper(ctx.applicationContext, "center.db", null, 3) {
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
             "CREATE TABLE habits (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, descr TEXT NOT NULL DEFAULT '', " +
@@ -40,6 +40,14 @@ class CenterDb(ctx: Context) : SQLiteOpenHelper(ctx.applicationContext, "center.
         db.execSQL("CREATE TABLE sleep (day TEXT PRIMARY KEY, bed TEXT NOT NULL DEFAULT '', wake TEXT NOT NULL DEFAULT '', energy INTEGER NOT NULL DEFAULT 0, note TEXT NOT NULL DEFAULT '')")
         db.execSQL("CREATE TABLE care_log (id INTEGER PRIMARY KEY AUTOINCREMENT, day TEXT NOT NULL, product TEXT NOT NULL, reaction TEXT NOT NULL, note TEXT NOT NULL DEFAULT '')")
         db.execSQL("CREATE TABLE kv (k TEXT PRIMARY KEY, v TEXT NOT NULL)")
+        createPhotos(db)
+    }
+
+    private fun createPhotos(db: SQLiteDatabase) {
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS photos (id INTEGER PRIMARY KEY AUTOINCREMENT, day TEXT NOT NULL, kind TEXT NOT NULL, " +
+                "note TEXT NOT NULL DEFAULT '', file TEXT NOT NULL, created INTEGER NOT NULL DEFAULT 0)"
+        )
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
@@ -47,6 +55,7 @@ class CenterDb(ctx: Context) : SQLiteOpenHelper(ctx.applicationContext, "center.
         if (oldVersion < 2) {
             db.execSQL("ALTER TABLE habits ADD COLUMN remind TEXT NOT NULL DEFAULT ''")
         }
+        if (oldVersion < 3) createPhotos(db)
     }
 }
 
@@ -54,10 +63,12 @@ class CenterDb(ctx: Context) : SQLiteOpenHelper(ctx.applicationContext, "center.
 object Center {
     private var dbInst: CenterDb? = null
     private var spInst: SharedPreferences? = null
+    private var appCtx: Context? = null
 
     fun init(ctx: Context) {
         if (dbInst == null) {
             val app = ctx.applicationContext
+            appCtx = app
             dbInst = CenterDb(app)
             spInst = app.getSharedPreferences("center_prefs", Context.MODE_PRIVATE)
         }
@@ -109,7 +120,9 @@ object Center {
             "goals" -> { db.delete("goal_entries", null, null); db.delete("goals", null, null) }
             "sleep" -> db.delete("sleep", null, null)
             "care" -> db.delete("care_log", null, null)
+            "photos" -> appCtx?.let { PhotoRepo.deleteAll(it) }
             "all" -> {
+                appCtx?.let { PhotoRepo.deleteAll(it) }
                 for (t in listOf("habit_log", "habits", "session_ex", "sessions", "measures", "goal_entries", "goals", "sleep", "care_log", "kv")) db.delete(t, null, null)
                 sp.edit().clear().apply()
             }

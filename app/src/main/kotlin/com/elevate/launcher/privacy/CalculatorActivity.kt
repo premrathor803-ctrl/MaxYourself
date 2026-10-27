@@ -55,6 +55,10 @@ class CalculatorActivity : BaseActivity() {
         TextViewCompat.setAutoSizeTextTypeUniformWithConfiguration(exprView, 24, 56, 2, TypedValue.COMPLEX_UNIT_SP)
         display.addView(histView, lp(MATCH, WRAP))
         display.addView(exprView, lp(MATCH, WRAP))
+        // Long-pressing the numbers asks for fingerprint or face, only if that was switched on in the privacy settings.
+        display.setOnLongClickListener {
+            if (Auth.bioOn(this)) { bioUnlock(); true } else false
+        }
         root.addView(display, lp(MATCH, 0, 2f))
 
         val rows = listOf(
@@ -74,6 +78,15 @@ class CalculatorActivity : BaseActivity() {
         setContentView(root)
         edgeToEdge(root)
         render()
+    }
+
+    private fun bioUnlock() {
+        Bio.prompt(this, "Confirm it is you", "Opens your private list") {
+            Auth.unlockSession()
+            val i = Intent(this, HiddenAppsActivity::class.java)
+            intent.getStringExtra("ci_nosecure")?.let { i.putExtra("ci_nosecure", it) }
+            startActivity(i)
+        }
     }
 
     private fun isOp(c: Char) = c == '+' || c == '-' || c == '*' || c == '/'

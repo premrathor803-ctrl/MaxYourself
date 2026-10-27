@@ -112,6 +112,28 @@ class PrivacyActivity : BaseActivity() {
             button("Open hidden apps") { Auth.openHiddenApps(this) }
         }
 
+        heading("Fingerprint or face (optional)")
+        if (!Auth.hasCode(this)) {
+            note("Set an access code first. Fingerprint or face is only an extra way in, and the code stays your main key.")
+        } else {
+            val why = Bio.unavailableReason(this)
+            if (why != null) {
+                note(why)
+            } else if (Auth.bioOn(this)) {
+                note("On. In the Calculator, press and hold the numbers at the top, then confirm with your fingerprint or face. Typing the code still works.")
+                button("Turn off fingerprint / face") { Auth.setBio(this, false); render() }
+            } else {
+                note("Add a quicker way in. You still need the code to set it up, and the code always works. Anyone whose fingerprint or face is saved on this phone will be able to open the list.")
+                button("Turn on fingerprint / face") {
+                    Bio.prompt(this, "Confirm to turn on", "Use a fingerprint or face already saved on this phone") {
+                        Auth.setBio(this, true)
+                        toast("Turned on")
+                        render()
+                    }
+                }
+            }
+        }
+
         heading("Calculator icon")
         note("The Calculator is a real, working calculator. Switch the icon on to get a separate \"Calculator\" app icon that opens it. The code is typed there. Elevate's own menu can also open it.")
         val on = Auth.calculatorIconOn(this)
@@ -122,7 +144,7 @@ class PrivacyActivity : BaseActivity() {
         }
 
         heading("Good to know")
-        note("• The code is never saved. Only a scrambled (hashed) version is kept on this phone.\n• After 5 wrong codes, unlocking pauses for a while, and the pause grows with more wrong tries. A wrong code just shows as a normal number in the calculator.\n• If you forget the code, \"I forgot my code\" asks for your phone's screen lock, then lets you set a new one. If your phone has no screen lock, anyone could do this, so set one.\n• If you clear Elevate's data or uninstall it, the code and the hidden list are lost and all apps show again.\n• Fingerprint or face unlock is not offered in this version.")
+        note("• The code is never saved. Only a scrambled (hashed) version is kept on this phone.\n• After 5 wrong codes, unlocking pauses for a while, and the pause grows with more wrong tries. A wrong code just shows as a normal number in the calculator.\n• If you forget the code, \"I forgot my code\" asks for your phone's screen lock, then lets you set a new one. If your phone has no screen lock, anyone could do this, so set one.\n• If you clear Elevate's data or uninstall it, the code and the hidden list are lost and all apps show again.\n• Fingerprint or face unlock is optional and off until you turn it on. It uses the fingerprints or faces saved in Android, and Elevate never sees them.")
     }
 
     // ------------------------------------------------------------ code entry

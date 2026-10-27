@@ -165,7 +165,7 @@ class HomeActivity : BaseActivity(), DrawerHost {
         if (i.getBooleanExtra("ci_edit", false)) enterEdit()
         if (i.getBooleanExtra("ci_folder", false)) openFirstFolder()
         i.getStringExtra("ci_action")?.let { runAction(it) }
-        if (i.getBooleanExtra("ci_gaming_banner", false)) gamingBanner.visibility = if (Gaming.on) View.VISIBLE else View.GONE
+        if (i.getBooleanExtra("ci_gaming_banner", false)) { if (drawer.isOpen) drawer.close(); gamingBanner.visibility = if (Gaming.on) View.VISIBLE else View.GONE }
         if (i.getBooleanExtra("ci_widgets_page", false)) { if (drawer.isOpen) drawer.close(); Prefs.widgetsPage = true; onWidgetsChanged(true) }
         if (i.getBooleanExtra("ci_widget_picker", false)) widgets.showPicker()
         if (i.getBooleanExtra("ci_widget_today", false)) widgets.addProvider(ComponentName(this, TodayWidget::class.java))

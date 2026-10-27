@@ -90,6 +90,10 @@ class DashboardScreen(host: CenterActivity) : Screen(host) {
             Triple("Learn", "Short offline guides", { host.openSection("learn") }),
             Triple("Reminders", "Optional nudges", { host.openSection("reminders") })
         )
+        col.tileRow(
+            Triple("Photo journal", "Private progress photos", { host.openSection("photos") }),
+            null
+        )
         col.noteCard("General fitness and wellness information. It is not medical advice, and nothing here rates your looks or promises to change your height. Everything stays on this phone.")
         return col
     }

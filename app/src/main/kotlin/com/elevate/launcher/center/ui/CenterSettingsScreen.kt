@@ -50,6 +50,7 @@ class CenterSettingsScreen(host: CenterActivity) : Screen(host) {
             Triple("sleep", "Delete sleep log", "All logged nights."),
             Triple("goals", "Delete goals", "Goals and their progress entries."),
             Triple("care", "Delete product reaction log", "All reaction notes."),
+            Triple("photos", "Delete journal photos", "Every photo in the Photo journal, including the picture files."),
             Triple("all", "Delete everything in the Center", "All of the above, plus your Center settings.")
         )
         for ((key, label, detail) in items) {
@@ -64,7 +65,7 @@ class CenterSettingsScreen(host: CenterActivity) : Screen(host) {
 
         col.heading("About", 12)
         col.noteCard("Included: habits, guided workouts, grooming and skincare guides, posture and mobility, optional height and sleep logs, goals, and progress charts. All content works offline.")
-        col.noteCard("Not included: any rating of your looks from photos. The Center never rates your looks, and nothing in it promises to change your height or face shape.")
+        col.noteCard("Photo journal: pictures you take stay in Elevate's private storage on this phone. Nothing rates or scores your looks, and nothing here promises to change your height or face shape.")
         col.noteCard("General fitness and wellness information. It is not medical advice. If something worries you, talk to a doctor.")
         return col
     }
