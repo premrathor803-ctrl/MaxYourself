@@ -5,7 +5,7 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 
 /** Home layout + per-app metadata. The Center (habits, workouts...) has its own database. */
-class LauncherDb(ctx: Context) : SQLiteOpenHelper(ctx.applicationContext, "launcher.db", null, 1) {
+class LauncherDb(ctx: Context) : SQLiteOpenHelper(ctx.applicationContext, "launcher.db", null, 2) {
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
@@ -20,10 +20,20 @@ class LauncherDb(ctx: Context) : SQLiteOpenHelper(ctx.applicationContext, "launc
                 "label TEXT NOT NULL DEFAULT '', launches INTEGER NOT NULL DEFAULT 0, " +
                 "last_used INTEGER NOT NULL DEFAULT 0, icon TEXT NOT NULL DEFAULT '')"
         )
+        createWidgets(db)
+    }
+
+    private fun createWidgets(db: SQLiteDatabase) {
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS widgets (" +
+                "id INTEGER PRIMARY KEY, appwidget_id INTEGER NOT NULL, provider TEXT NOT NULL, " +
+                "height_dp INTEGER NOT NULL DEFAULT 160, pos INTEGER NOT NULL DEFAULT 0)"
+        )
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        // No upgrades yet. Future versions add columns/tables here without dropping user data.
+        // Upgrades only add columns or tables; user data is never dropped.
+        if (oldVersion < 2) createWidgets(db)
     }
 }
 
@@ -35,5 +45,6 @@ object Store {
         db = LauncherDb(ctx)
         AppMeta.load()
         HomeRepo.load()
+        com.elevate.launcher.widgets.WidgetStore.load()
     }
 }

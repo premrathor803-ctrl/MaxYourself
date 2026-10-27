@@ -1,5 +1,6 @@
 package com.elevate.launcher.ui.home
 
+import android.content.ComponentName
 import android.content.Intent
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
@@ -46,6 +47,9 @@ import com.elevate.launcher.ui.drawer.DrawerHost
 import com.elevate.launcher.ui.drawer.DrawerView
 import com.elevate.launcher.ui.onboarding.OnboardingActivity
 import com.elevate.launcher.ui.settings.SettingsActivity
+import com.elevate.launcher.widgets.TodayWidget
+import com.elevate.launcher.widgets.WidgetController
+import com.elevate.launcher.widgets.WidgetsPageView
 import kotlin.math.abs
 import kotlin.math.max
 
@@ -64,6 +68,7 @@ class HomeActivity : BaseActivity(), DrawerHost {
     private lateinit var drawer: DrawerView
     private lateinit var drag: DragController
     private lateinit var signature: String
+    private lateinit var widgets: WidgetController
     private var editing = false
     private var editBar: LinearLayout? = null
     private var lastRawX = 0f
@@ -81,6 +86,7 @@ class HomeActivity : BaseActivity(), DrawerHost {
         if (intent?.getBooleanExtra("ci_skip_onboarding", false) == true) Prefs.onboarded = true
         signature = prefsSignature()
         HomeRepo.ensureGrid()
+        widgets = WidgetController(this) { goTo -> onWidgetsChanged(goTo) }
         buildUi()
         AppCatalog.addListener(catalogListener)
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
@@ -91,9 +97,25 @@ class HomeActivity : BaseActivity(), DrawerHost {
         handleExtras(intent)
     }
 
+    override fun onStart() {
+        super.onStart()
+        widgets.start()
+    }
+
+    override fun onStop() {
+        widgets.stop()
+        super.onStop()
+    }
+
     override fun onDestroy() {
         AppCatalog.removeListener(catalogListener)
         super.onDestroy()
+    }
+
+    @Suppress("DEPRECATION")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        widgets.onResult(requestCode, resultCode, data)
     }
 
     override fun onResume() {
@@ -136,6 +158,9 @@ class HomeActivity : BaseActivity(), DrawerHost {
         if (i.getBooleanExtra("ci_edit", false)) enterEdit()
         if (i.getBooleanExtra("ci_folder", false)) openFirstFolder()
         i.getStringExtra("ci_action")?.let { runAction(it) }
+        if (i.getBooleanExtra("ci_widgets_page", false)) { Prefs.widgetsPage = true; onWidgetsChanged(true) }
+        if (i.getBooleanExtra("ci_widget_picker", false)) widgets.showPicker()
+        if (i.getBooleanExtra("ci_widget_today", false)) widgets.addProvider(ComponentName(this, TodayWidget::class.java))
     }
 
     private fun maybeSeed() {
@@ -229,7 +254,7 @@ class HomeActivity : BaseActivity(), DrawerHost {
 
     private fun updateDots() {
         dots.removeAllViews()
-        val n = 1 + Prefs.pages
+        val n = pageCount()
         val cur = if (::pager.isInitialized) pager.currentItem else 1
         for (i in 0 until n) {
             val sel = i == cur
@@ -245,17 +270,35 @@ class HomeActivity : BaseActivity(), DrawerHost {
 
     // ------------------------------------------------------------------ pages
     private inner class PageAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-        override fun getItemCount() = 1 + Prefs.pages
-        override fun getItemViewType(position: Int) = if (position == 0) 0 else 1
+        override fun getItemCount() = pageCount()
+        override fun getItemViewType(position: Int) = if (position == 0) 0 else if (position == widgetsIndex()) 2 else 1
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-            val v: View = if (viewType == 0) CenterPanelView(this@HomeActivity) { openCenter(it) } else CellGrid(this@HomeActivity)
+            val v: View = when (viewType) {
+                0 -> CenterPanelView(this@HomeActivity) { openCenter(it) }
+                2 -> WidgetsPageView(this@HomeActivity, widgets)
+                else -> CellGrid(this@HomeActivity)
+            }
             v.layoutParams = RecyclerView.LayoutParams(MATCH, MATCH)
             return object : RecyclerView.ViewHolder(v) {}
         }
         override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
             val v = holder.itemView
             if (v is CellGrid) bindPage(v, position - 1)
+            else if (v is WidgetsPageView) v.bind()
         }
+    }
+
+    /** Center + icon pages (+ the optional widgets page at the very end, so home page indices never shift). */
+    private fun pageCount() = 1 + Prefs.pages + (if (Prefs.widgetsPage) 1 else 0)
+    private fun widgetsIndex() = if (Prefs.widgetsPage) Prefs.pages + 1 else -1
+    private fun onWidgetsPage() = ::pager.isInitialized && pager.currentItem == widgetsIndex()
+
+    private fun onWidgetsChanged(goTo: Boolean) {
+        if (!::pager.isInitialized) return
+        pager.adapter?.notifyDataSetChanged()
+        updateDots()
+        val idx = widgetsIndex()
+        if (goTo && idx > 0) pager.setCurrentItem(idx, false)
     }
 
     private fun sidePadding(): Int = when (Prefs.spacing) { "compact" -> dp(2); "spacious" -> dp(22); else -> dp(10) }
@@ -288,7 +331,7 @@ class HomeActivity : BaseActivity(), DrawerHost {
     fun refreshHome() {
         if (!::pager.isInitialized) return
         val adapter = pager.adapter ?: return
-        if (adapter.itemCount != 1 + Prefs.pages) adapter.notifyDataSetChanged()
+        if (adapter.itemCount != pageCount()) adapter.notifyDataSetChanged()
         val rv = pager.getChildAt(0) as? RecyclerView
         if (rv != null) for (i in 0 until rv.childCount) { val c = rv.getChildAt(i); if (c is CellGrid) bindPage(c, c.pageIndex) }
         bindDock()
@@ -310,6 +353,7 @@ class HomeActivity : BaseActivity(), DrawerHost {
 
     /** Move to the next/previous home page while dragging; adds a page at the far right edge. */
     fun flipPage(dir: Int) {
+        if (onWidgetsPage()) return
         val target = pager.currentItem + dir
         if (target < 1) return
         if (target > Prefs.pages) {
@@ -489,6 +533,7 @@ class HomeActivity : BaseActivity(), DrawerHost {
         add("Delete page") { deletePage() }
         add("◀ Move page") { movePage(-1) }
         add("Move page ▶") { movePage(1) }
+        add("+ Widget") { widgets.showPicker() }
         add("Grid & icons") { showGridDialog() }
         add("Wallpaper") { Launch.wallpaperPicker(this) }
         add("Settings") { openSettings() }
@@ -513,7 +558,7 @@ class HomeActivity : BaseActivity(), DrawerHost {
 
     private fun deletePage() {
         val cur = pager.currentItem
-        if (cur == 0) { toast("Open a home page first"); return }
+        if (cur == 0 || cur > Prefs.pages) { toast("Open a home page first"); return }
         if (Prefs.pages <= 1) { toast("Keep at least one page"); return }
         val p = cur - 1
         val n = HomeRepo.pageItems(p).size
@@ -528,7 +573,7 @@ class HomeActivity : BaseActivity(), DrawerHost {
 
     private fun movePage(dir: Int) {
         val cur = pager.currentItem
-        if (cur == 0) { toast("Open a home page first"); return }
+        if (cur == 0 || cur > Prefs.pages) { toast("Open a home page first"); return }
         val from = cur - 1
         val to = from + dir
         if (to < 0 || to >= Prefs.pages) return
@@ -615,7 +660,7 @@ class HomeActivity : BaseActivity(), DrawerHost {
             drag.onTouch(ev)
             return true
         }
-        if (!editing && !drawer.isOpen && pager.currentItem != 0) detector.onTouchEvent(ev)
+        if (!editing && !drawer.isOpen && pager.currentItem != 0 && !onWidgetsPage()) detector.onTouchEvent(ev)
         return super.dispatchTouchEvent(ev)
     }
 
@@ -653,6 +698,7 @@ class HomeActivity : BaseActivity(), DrawerHost {
         val opts = ArrayList<String>()
         opts.add("Edit home screen")
         opts.add("Wallpaper")
+        opts.add("Add widget")
         opts.add("Launcher settings")
         val hasCenter = HomeRepo.items.any { it.kind == HomeRepo.KIND_CENTER }
         if (!hasCenter) opts.add("Add Center shortcut")
@@ -660,6 +706,7 @@ class HomeActivity : BaseActivity(), DrawerHost {
             when (opts[i]) {
                 "Edit home screen" -> enterEdit()
                 "Wallpaper" -> Launch.wallpaperPicker(this)
+                "Add widget" -> widgets.showPicker()
                 "Launcher settings" -> openSettings()
                 "Add Center shortcut" -> {
                     val cap = Prefs.cols * Prefs.rows

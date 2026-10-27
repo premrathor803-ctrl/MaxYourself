@@ -43,6 +43,10 @@ object Prefs {
     val showLabels get() = b("show_labels", true)
     val showClock get() = b("show_clock", true)
     val showSearch get() = b("show_search", true)
+    /** An extra page at the end of the home pager that holds widgets. */
+    var widgetsPage: Boolean
+        get() = b("widgets_page", false)
+        set(v) = putBool("widgets_page", v)
     var pages: Int
         get() = getInt("pages", 2).coerceIn(1, 8)
         set(v) = putInt("pages", v.coerceIn(1, 8))

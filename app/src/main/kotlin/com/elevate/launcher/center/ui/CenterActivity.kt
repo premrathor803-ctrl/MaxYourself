@@ -125,6 +125,7 @@ class CenterActivity : BaseActivity() {
 
     override fun onPause() {
         stack.lastOrNull()?.onPauseScreen()
+        com.elevate.launcher.widgets.TodayWidget.refresh(this)
         super.onPause()
     }
 

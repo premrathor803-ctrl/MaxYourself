@@ -19,6 +19,8 @@
         <intent><action android:name="com.novalauncher.THEME" /></intent>
         <intent><action android:name="com.anddoes.launcher.THEME" /></intent>
         <intent><action android:name="com.gau.go.launcherex.theme" /></intent>
+        <!-- Apps that offer widgets, so their names show in the widget picker -->
+        <intent><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent>
     </queries>
 
     <application
@@ -94,6 +96,19 @@
             android:name=".privacy.PrivacyActivity"
             android:exported="false"
             android:theme="@style/Theme.Elevate" />
+
+        <!-- Elevate's own widget: habits done today and the workout plan. Only active if someone adds it. -->
+        <receiver
+            android:name=".widgets.TodayWidget"
+            android:exported="true"
+            android:label="@string/widget_today_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/today_widget_info" />
+        </receiver>
 
         <activity
             android:name=".backup.BackupActivity"

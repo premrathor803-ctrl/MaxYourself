@@ -78,6 +78,21 @@ shot r2-notification-shade
 timeout 45 adb shell cmd statusbar collapse < /dev/null >> out/starts.txt 2>&1
 sleep 1
 
+# ---- widgets: the widgets page, the picker, and adding Elevate's own Today widget through the normal bind flow
+timeout 45 adb shell cmd appwidget grantbind --package "$PKG" --user 0 < /dev/null >> out/starts.txt 2>&1 || true
+timeout 45 adb shell am start -W -n "$PKG/.ui.home.HomeActivity" --ez ci_skip_onboarding true --ez ci_widgets_page true < /dev/null >> out/starts.txt 2>&1
+sleep 3
+shot w1-widgets-page-empty
+timeout 45 adb shell am start -W -n "$PKG/.ui.home.HomeActivity" --ez ci_widget_picker true < /dev/null >> out/starts.txt 2>&1
+sleep 4
+shot w2-widget-picker
+timeout 45 adb shell input keyevent KEYCODE_BACK < /dev/null
+sleep 1
+timeout 45 adb shell am start -W -n "$PKG/.ui.home.HomeActivity" --ez ci_widget_today true < /dev/null >> out/starts.txt 2>&1
+sleep 5
+shot w3-today-widget-added
+timeout 45 adb shell dumpsys appwidget < /dev/null 2>&1 | grep -E "Provider|Widget|com.elevate" | head -20 > out/appwidget.txt || true
+
 timeout 45 adb shell am start -W -n "$PKG/.center.ui.CenterActivity" --es section player:beginner_full_a < /dev/null >> out/starts.txt 2>&1
 sleep 3
 shot c1-player-intro
@@ -258,6 +273,10 @@ adb logcat -d -s AndroidRuntime:E ActivityManager:E > out/runtime.txt 2>&1 || tr
   echo "Self-test output from the app (ElevateCI log lines):"
   echo '```'
   head -c 4000 out/ci-log.txt
+  echo '```'
+  echo "Widgets known to Android for Elevate:"
+  echo '```'
+  head -c 2000 out/appwidget.txt
   echo '```'
   echo "Start results:"
   echo '```'

@@ -148,6 +148,7 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
         switch(home, "show_labels", "App names under icons", "", true)
         switch(home, "show_clock", "Clock and date", "", true)
         switch(home, "show_search", "Search bar", "", true)
+        switch(home, "widgets_page", "Widgets page", "An extra page after your icon pages for widgets. Add widgets from Edit home screen > + Widget.", false)
         action(home, "Reset home layout", "Back to the default arrangement. Apps stay installed.") {
             Dialogs.confirm(requireContext(), "Reset home layout", "Your icons, folders and pages go back to the default arrangement. Your apps are not uninstalled.", "Reset") {
                 HomeRepo.reset(requireContext())

@@ -258,6 +258,7 @@ object Reminders {
     fun markDone(ctx: Context, id: Long, day: String) {
         HabitRepo.setState(id, day, HabitRepo.LOG_DONE)
         NotificationManagerCompat.from(ctx).cancel(notifId("habit", id))
+        com.elevate.launcher.widgets.TodayWidget.refresh(ctx)
     }
 
     fun snooze(ctx: Context, kind: String, id: Long, day: String) {
