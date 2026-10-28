@@ -361,6 +361,7 @@ class PlayerScreen(host: CenterActivity, private val plan: Plan, resume: ResumeS
         bodyBox.addView(UiKit.text(host, e.name, 26f, Palette.text, true), lp(MATCH, WRAP).apply { bottomMargin = host.dp(4) })
         bodyBox.para("Set 1 of ${step.sets} · ${targetText()}", dim = false, sp = 15f, bottom = 8)
         bodyBox.para(e.purpose, sp = 13.5f)
+        bodyBox.poseView(e.key, e.name, 200, 10)
         bodyBox.card {
             cardTitle("Start position")
             para(e.startPos, dim = false, sp = 13.5f, bottom = 8)
@@ -386,7 +387,8 @@ class PlayerScreen(host: CenterActivity, private val plan: Plan, resume: ResumeS
         bodyBox.addView(name, lp(MATCH, WRAP).apply { bottomMargin = host.dp(4) })
         val setLine = UiKit.text(host, "Set $setNo of ${step.sets}", 15f, Palette.dim)
         setLine.gravity = Gravity.CENTER
-        bodyBox.addView(setLine, lp(MATCH, WRAP).apply { bottomMargin = host.dp(16) })
+        bodyBox.addView(setLine, lp(MATCH, WRAP).apply { bottomMargin = host.dp(10) })
+        bodyBox.poseView(e.key, e.name, 150, 10)
 
         if (e.timed && Center.useTimers) {
             if (e.perSide) {

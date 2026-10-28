@@ -10,6 +10,7 @@ import com.elevate.launcher.center.content.Exercise
 import com.elevate.launcher.center.content.Exercises
 import com.elevate.launcher.center.content.Plan
 import com.elevate.launcher.center.content.PlanStep
+import com.elevate.launcher.center.content.PoseData
 import com.elevate.launcher.center.content.Plans
 import com.elevate.launcher.center.data.Center
 import com.elevate.launcher.center.data.Days
@@ -307,6 +308,10 @@ class ExerciseDetailScreen(host: CenterActivity, private val ex: Exercise) : Scr
         val col = host.vbox()
         col.para("${ex.category} · ${ex.levelName} · " + (if (ex.timed) "timed hold" else "reps") + (if (ex.perSide) " · each side" else ""), sp = 13f)
         col.para(ex.purpose, dim = false, sp = 14.5f)
+        if (PoseData.get(ex.key) != null) col.card {
+            poseView(ex.key, ex.name)
+            para(poseHint(ex.key), sp = 12f, bottom = 0)
+        }
         col.heading("Starting position", 8)
         col.para(ex.startPos, dim = false)
         col.heading("How to do it", 8)

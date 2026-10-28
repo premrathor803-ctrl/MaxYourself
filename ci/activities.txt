@@ -10,6 +10,12 @@ center-habits .center.ui.CenterActivity --es section habits
 center-workouts .center.ui.CenterActivity --es section workouts
 center-plan .center.ui.CenterActivity --es section plan:beginner_full_a
 center-exercise .center.ui.CenterActivity --es section exercise:glute_bridge
+center-exercise-squat .center.ui.CenterActivity --es section exercise:bodyweight_squat
+center-poses-0 .center.ui.CenterActivity --es section poses:0
+center-poses-1 .center.ui.CenterActivity --es section poses:1
+center-poses-2 .center.ui.CenterActivity --es section poses:2
+center-poses-3 .center.ui.CenterActivity --es section poses:3
+center-player .center.ui.CenterActivity --es section player:beginner_full_a
 center-history .center.ui.CenterActivity --es section history
 center-grooming .center.ui.CenterActivity --es section grooming
 center-posture .center.ui.CenterActivity --es section posture

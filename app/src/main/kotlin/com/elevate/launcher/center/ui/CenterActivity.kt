@@ -293,6 +293,7 @@ class CenterActivity : BaseActivity() {
             section.startsWith("photo:") -> section.removePrefix("photo:").toLongOrNull()?.let { PhotoDetailScreen(this, it) }
             section == "photocompare:first" -> PhotoRepo.all().let { l -> if (l.size >= 2) PhotoCompareScreen(this, l[l.size - 1].id, l[0].id) else null }
             section.startsWith("article:") -> Articles.get(section.removePrefix("article:"))?.let { ArticleScreen(this, it) }
+            section.startsWith("poses:") -> section.removePrefix("poses:").toIntOrNull()?.let { PoseGalleryScreen(this, it) }
             section.startsWith("exercise:") -> Exercises.get(section.removePrefix("exercise:"))?.let { ExerciseDetailScreen(this, it) }
             section.startsWith("player:") -> Plans.get(section.removePrefix("player:"))?.let { PlayerScreen(this, it, null) }
             section.startsWith("plan:") -> Plans.get(section.removePrefix("plan:"))?.let { PlanDetailScreen(this, it) }
