@@ -20,13 +20,23 @@ Uninstall V1 once, then install V2. Later builds update normally.
 - Home pages with a persistent layout, dock, folders, edit mode, a Center panel page
 - App drawer with search (apps, Center features, articles, exercises, plans)
 - Themes: system / light / dark, pure-black option, 7 accent colours
-- Grid size and spacing controls, performance profile, gestures, wallpaper toggle
+- Grid size and spacing controls, performance profile, wallpaper toggle
+- Gestures you can set yourself: swipe up/down, double tap, long press, pinch in/out, two-finger swipes. Actions include
+  open drawer, search, notifications, Center, settings, edit mode, Gaming mode, flashlight, hidden apps and lock screen
+- Five clock styles (classic, bold, stacked, compact, analog)
+- Font: system, serif, monospace, condensed, or one `.ttf` / `.otf` file you import (kept privately, not in backups)
+- Settings search, and "Change group" on any app in the drawer when the automatic group is wrong
+- Widgets: an optional widgets page for normal Android widgets, plus a small "Elevate Today" widget
 - Removed apps are handled without crashing (shown as missing, can be cleaned up)
 - Reset and delete controls for launcher settings and for Center data
 
 **Center**
 - Habits with distinct states (done, partial, skipped, missed, not scheduled), runs and best runs
 - 41 exercises, 10 plans, a guided workout player (timer, rest, pause, resume, end early)
+- A stick-figure picture for every exercise (start and end position, animated, tap to pause). Drawn in code from joint
+  angles, so no image files. It stays still when animations are off
+- Reminders for habits and workouts (optional, off until you turn them on)
+- Private photo journal (see below)
 - Workout history and session details
 - 25 grooming, skincare, posture and learning articles plus a glossary
 - Optional height tracker and sleep tracker (off until you turn them on)
@@ -37,7 +47,27 @@ Uninstall V1 once, then install V2. Later builds update normally.
 - Open the hidden list through a working **Calculator**: type your 4-8 digit code and press `=`
 - Code is stored only as a salted PBKDF2 hash, with growing lock-outs after wrong tries
 - Optional separate "Calculator" launcher icon
+- Optional fingerprint or face (Android's own prompt) as a second way in, through a long-press on the Calculator display.
+  It needs the code to be set first, and the code stays the main key
 - Forgot your code: confirm with your phone's screen lock, then set a new one
+
+**Photo journal** (optional)
+- Take or pick progress photos, compare two of them side by side, add notes
+- Pictures are copied into Elevate's private storage, shrunk and re-saved, which removes location and camera data
+- Never in your gallery, never uploaded, never in backups, screenshots blocked on those screens
+- No scoring, no ratings, no analysis of your face or body. The only hint is about the picture itself
+  ("looks dark", "may be blurry") so photos are easier to compare. Camera permission is not requested: Elevate asks
+  your camera app to take the picture
+
+**Gaming mode**
+- Pauses Elevate's reminders, groups your games, optional Do Not Disturb (priority only), optional break reminders,
+  a Quick Settings tile
+- It does **not** make games faster, free memory or change graphics
+
+**Backup and restore**
+- One JSON file with your home layout, settings, and (if you tick them) Center records and the hidden-apps list
+- Checked before restoring; a bad file is rejected without changing anything
+- Never includes the access code, photos, widgets or an imported font
 
 **Icon packs**
 - Reads packs made for ADW / Nova style launchers, applies them to apps the pack covers
@@ -56,11 +86,20 @@ Uninstall V1 once, then install V2. Later builds update normally.
 - The content is general education, not medical advice.
 - Tested on an Android 10 emulator and by automated screenshots. It has not been measured on real low-end
   hardware, so no speed or battery numbers are claimed.
+- **Not tried on a real phone:** fingerprint unlock, the camera and gallery pickers, Do Not Disturb, the screen-lock
+  gesture, and configuring third-party widgets. The emulator cannot do these, so they are written to Android's
+  documented behaviour but not seen working.
+- Reminders use approximate alarms so they are gentle on the battery. They can arrive a few minutes late, and some
+  phone makers stop them unless the app is allowed to run in the background.
+- The lock-screen gesture needs a one-time Accessibility setting and Android 9 or newer. Elevate's service only locks
+  the screen; it does not read what is on it.
+- Widgets are not part of backups. Add them again after restoring.
+- Custom fonts change Elevate's own screens, not Android's Settings or system dialogs.
 
 ## Not in this version
 
-Reminders and notifications, home-screen widgets, Gaming Mode, backup and restore, optional photo
-progress analysis, Focus Mode, multiple profiles, and fingerprint / face unlock.
+RSS and weather (they would need the INTERNET permission, which goes against the offline-only design),
+Focus Mode, and multiple profiles. Photo "analysis" of faces or bodies is left out on purpose.
 
 ## Building
 

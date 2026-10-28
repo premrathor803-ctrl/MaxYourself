@@ -64,7 +64,7 @@ class CenterSettingsScreen(host: CenterActivity) : Screen(host) {
         }
 
         col.heading("About", 12)
-        col.noteCard("Included: habits, guided workouts, grooming and skincare guides, posture and mobility, optional height and sleep logs, goals, and progress charts. All content works offline.")
+        col.noteCard("Included: habits with optional reminders, guided workouts with exercise pictures, grooming and skincare guides, posture and mobility, optional height and sleep logs, goals, and progress charts. All content works offline.")
         col.noteCard("Photo journal: pictures you take stay in Elevate's private storage on this phone. Nothing rates or scores your looks, and nothing here promises to change your height or face shape.")
         col.noteCard("General fitness and wellness information. It is not medical advice. If something worries you, talk to a doctor.")
         return col
