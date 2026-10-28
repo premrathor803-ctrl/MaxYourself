@@ -33,6 +33,7 @@ object Prefs {
     val wallpaper get() = b("wallpaper", true)
     val perf get() = s("perf", "balanced")            // balanced | lightweight | minimal
     val iconShape get() = s("icon_shape", "squircle") // system | circle | squircle | rounded | square
+    val font get() = s("font", "system")              // system | serif | mono | condensed | custom
 
     // ---- home grid
     val cols get() = i("cols", 4).coerceIn(3, 6)
@@ -42,6 +43,7 @@ object Prefs {
     val spacing get() = s("spacing", "normal")        // compact | normal | spacious
     val showLabels get() = b("show_labels", true)
     val showClock get() = b("show_clock", true)
+    val clockStyle get() = s("clock_style", "classic") // classic | bold | stacked | compact | analog
     val showSearch get() = b("show_search", true)
     /** An extra page at the end of the home pager that holds widgets. */
     var widgetsPage: Boolean

@@ -52,7 +52,7 @@ class BackupActivity : PageActivity() {
         make.addView(option("Center settings", "Reminders, training days and other Center options.", optCenterSettings) { optCenterSettings = it })
         make.addView(option("Center records", "Habits, workouts, measurements, goals, sleep and care log. These are personal, so keep the file somewhere safe.", optCenterRecords) { optCenterRecords = it })
         make.addView(option("List of hidden apps", "Anyone who can open the file can read which apps you hide.", optHidden) { optHidden = it })
-        make.addView(UiKit.text(this, "Never included: your access code, photos, and widgets (add those again after restoring).", 13f, Palette.dim).apply { setPadding(0, dp(8), 0, dp(10)) })
+        make.addView(UiKit.text(this, "Never included: your access code, photos, widgets and an imported font file (add those again after restoring).", 13f, Palette.dim).apply { setPadding(0, dp(8), 0, dp(10)) })
         make.addView(UiKit.button(this, "Create backup file", true) { startCreate() }, lp(MATCH, WRAP))
         col.addView(make, lp(MATCH, WRAP).apply { bottomMargin = dp(14) })
 

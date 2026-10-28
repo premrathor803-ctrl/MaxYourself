@@ -44,7 +44,7 @@ object UiKit {
             text = s
             setTextSize(TypedValue.COMPLEX_UNIT_SP, sp)
             setTextColor(color)
-            if (bold) typeface = Typeface.DEFAULT_BOLD
+            typeface = Fonts.face(bold)
         }
 
     /** A filled pill button. */

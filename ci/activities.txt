@@ -4,6 +4,7 @@ home-p0 .ui.home.HomeActivity --ei ci_page 0
 home-drawer .ui.home.HomeActivity --ez ci_open_drawer true
 home-search .ui.home.HomeActivity --es ci_search cam
 settings .ui.settings.SettingsActivity
+settings-search .ui.settings.SettingsActivity --es ci_query clock
 onboarding .ui.onboarding.OnboardingActivity
 center .center.ui.CenterActivity --ez ci_seed true
 center-habits .center.ui.CenterActivity --es section habits
@@ -36,3 +37,17 @@ center-photo-detail .center.ui.CenterActivity --ez ci_photo_import true --es ci_
 center-photo-compare .center.ui.CenterActivity --ez ci_photo_import true --es ci_nosecure 1 --es section photocompare:first
 privacy .privacy.PrivacyActivity
 gaming .gaming.GamingActivity
+# font and clock style checks run last, because they change how every later screen looks
+font-on .ui.settings.SettingsActivity --es ci_font /system/fonts/DroidSansMono.ttf,/system/fonts/CutiveMono.ttf,/system/fonts/DancingScript-Regular.ttf
+font-home .ui.home.HomeActivity
+font-center .center.ui.CenterActivity --es section exercise:cat_cow
+font-off .ui.settings.SettingsActivity --es ci_font system
+clock-analog .ui.settings.SettingsActivity --es ci_clock analog
+clock-analog-home .ui.home.HomeActivity
+clock-stacked .ui.settings.SettingsActivity --es ci_clock stacked
+clock-stacked-home .ui.home.HomeActivity
+clock-compact .ui.settings.SettingsActivity --es ci_clock compact
+clock-compact-home .ui.home.HomeActivity
+clock-bold .ui.settings.SettingsActivity --es ci_clock bold
+clock-bold-home .ui.home.HomeActivity
+clock-off .ui.settings.SettingsActivity --es ci_clock classic

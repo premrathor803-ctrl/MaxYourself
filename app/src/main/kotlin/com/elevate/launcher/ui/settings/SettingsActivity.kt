@@ -2,6 +2,10 @@ package com.elevate.launcher.ui.settings
 
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.text.InputType
+import android.widget.EditText
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.widget.doAfterTextChanged
 import android.view.Gravity
 import android.view.View
 import android.widget.FrameLayout
@@ -16,6 +20,9 @@ import com.elevate.launcher.ElevateApp
 import com.elevate.launcher.core.BaseActivity
 import com.elevate.launcher.core.DefaultHome
 import com.elevate.launcher.core.Dialogs
+import com.elevate.launcher.core.Fonts
+import com.elevate.launcher.data.Io
+import com.elevate.launcher.core.dpf
 import com.elevate.launcher.core.MATCH
 import com.elevate.launcher.core.Palette
 import com.elevate.launcher.core.Perf
@@ -48,17 +55,46 @@ class SettingsActivity : BaseActivity() {
         bar.addView(UiKit.text(this, "Settings", 20f, Palette.text, true), lp(WRAP, WRAP).apply { leftMargin = dp(4) })
         root.addView(bar, lp(MATCH, WRAP))
         val container = FrameLayout(this).apply { id = View.generateViewId() }
+        val search = EditText(this).apply {
+            hint = "Search settings"
+            setSingleLine()
+            inputType = InputType.TYPE_CLASS_TEXT
+            setTextColor(Palette.text)
+            setHintTextColor(Palette.dim)
+            textSize = 15f
+            background = UiKit.rounded(Palette.surface, dpf(22f))
+            setPadding(dp(16), dp(10), dp(16), dp(10))
+        }
+        root.addView(search, lp(MATCH, WRAP).apply { leftMargin = dp(16); rightMargin = dp(16); bottomMargin = dp(6) })
+        val none = UiKit.text(this, "No settings match that.", 14f, Palette.dim).apply {
+            setPadding(dp(20), dp(12), dp(20), dp(4))
+            visibility = View.GONE
+        }
+        root.addView(none, lp(MATCH, WRAP))
         root.addView(container, lp(MATCH, 0, 1f))
         setContentView(root)
         edgeToEdge(root)
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction().replace(container.id, SettingsFragment()).commit()
         }
+        val refreshFilter = {
+            val q = search.text?.toString() ?: ""
+            val f = supportFragmentManager.findFragmentById(container.id) as? SettingsFragment
+            val shown = f?.filter(q) ?: 1
+            none.visibility = if (q.isNotBlank() && shown == 0) View.VISIBLE else View.GONE
+        }
+        search.doAfterTextChanged { refreshFilter() }
+        // used by the automated emulator test to look at the search results
+        intent.getStringExtra("ci_query")?.let { q -> container.post { search.setText(q) } }
     }
 }
 
 class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedPreferenceChangeListener {
     private var defaultHomePref: Preference? = null
+    private var fontPref: ListPreference? = null
+    private val pickFont = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) importFont(uri)
+    }
     private val gestureLabels = ArrayList<Pair<Preference, String>>()
 
     companion object {
@@ -95,7 +131,7 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
             screen.addPreference(c)
             return c
         }
-        fun list(g: PreferenceGroup, key: String, title: String, def: String, entries: List<Pair<String, String>>) {
+        fun list(g: PreferenceGroup, key: String, title: String, def: String, entries: List<Pair<String, String>>): ListPreference {
             val p = ListPreference(ctx)
             p.key = key
             p.title = title
@@ -105,6 +141,7 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
             p.summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
             p.isIconSpaceReserved = false
             g.addPreference(p)
+            return p
         }
         fun switch(g: PreferenceGroup, key: String, title: String, summary: String, def: Boolean) {
             val p = SwitchPreferenceCompat(ctx)
@@ -141,6 +178,25 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
         }
         action(look, "About icon packs", "Elevate reads packs made for ADW and Nova style launchers. Apps a pack does not cover keep their normal icon. Long-press an app on the home screen or in the drawer and choose Change icon to set one icon by hand. Support is checked against the common pack format, not against every pack.") { }
         switch(look, "wallpaper", "Show wallpaper on home", "Turn off for a plain themed background.", true)
+        val fp = list(look, "font", "Font", "system", listOf(
+            "system" to "System default", "serif" to "Serif", "mono" to "Monospace",
+            "condensed" to "Condensed", "custom" to "Imported font"
+        ))
+        fontPref = fp
+        fp.setOnPreferenceChangeListener { _, v ->
+            if (v == "custom" && !Fonts.hasCustom()) {
+                pickFont.launch(arrayOf("*/*"))
+                false
+            } else true
+        }
+        action(look, "Import a font file", "Choose a .ttf or .otf file from your phone. Use only fonts you are allowed to use. Elevate does not include or download fonts. It changes Elevate's own screens, not Android's Settings. Imported fonts are not part of backups.") {
+            pickFont.launch(arrayOf("*/*"))
+        }
+        action(look, "Remove imported font", "Deletes the copy of the font that Elevate kept.") {
+            Fonts.removeCustom()
+            fontPref?.value = Prefs.font
+            requireContext().toast("Imported font removed")
+        }
 
         // ---------------------------------------------------------------- home
         val home = cat("Home screen")
@@ -151,6 +207,10 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
         list(home, "spacing", "Spacing", "normal", listOf("compact" to "Compact", "normal" to "Normal", "spacious" to "Spacious"))
         switch(home, "show_labels", "App names under icons", "", true)
         switch(home, "show_clock", "Clock and date", "", true)
+        list(home, "clock_style", "Clock style", "classic", listOf(
+            "classic" to "Classic", "bold" to "Bold", "stacked" to "Stacked hours and minutes",
+            "compact" to "Compact, one line", "analog" to "Analog"
+        ))
         switch(home, "show_search", "Search bar", "", true)
         switch(home, "widgets_page", "Widgets page", "An extra page after your icon pages for widgets. Add widgets from Edit home screen > + Widget.", false)
         action(home, "Reset home layout", "Back to the default arrangement. Apps stay installed.") {
@@ -242,6 +302,47 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
         action(about, "Elevate Launcher", "Version $ver  •  ${Perf.label}") { }
     }
 
+    private fun importFont(uri: android.net.Uri) {
+        val app = requireContext().applicationContext
+        Io.work {
+            val msg: String? = try {
+                val stream = app.contentResolver.openInputStream(uri)
+                if (stream == null) "Could not open that file." else stream.use { Fonts.import(it) }
+            } catch (e: Throwable) {
+                "Could not read that file."
+            }
+            Io.ui {
+                if (isAdded) {
+                    if (msg == null) { fontPref?.value = "custom"; app.toast("Font imported") } else app.toast(msg)
+                }
+            }
+        }
+    }
+
+    /** Shows only the settings that match [q] (empty shows everything). Returns how many are shown. */
+    fun filter(q: String): Int {
+        val screen = preferenceScreen ?: return 0
+        val query = q.trim().lowercase()
+        var shown = 0
+        for (i in 0 until screen.preferenceCount) {
+            val g = screen.getPreference(i)
+            if (g !is PreferenceGroup) continue
+            val categoryHit = query.isNotEmpty() && matches(g, query)
+            var any = false
+            for (j in 0 until g.preferenceCount) {
+                val p = g.getPreference(j)
+                val hit = query.isEmpty() || categoryHit || matches(p, query)
+                p.isVisible = hit
+                if (hit) { any = true; shown++ }
+            }
+            g.isVisible = any
+        }
+        return shown
+    }
+
+    private fun matches(p: Preference, q: String): Boolean =
+        (p.title?.toString() ?: "").lowercase().contains(q) || (p.summary?.toString() ?: "").lowercase().contains(q)
+
     private fun iconPackSummary(): String {
         val ctx = requireContext()
         val pack = Prefs.iconPack
@@ -293,6 +394,23 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
 
     override fun onViewCreated(view: android.view.View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        // used by the automated emulator test to try each clock style
+        activity?.intent?.getStringExtra("ci_clock")?.let { Prefs.putString("clock_style", it) }
+        // used by the automated emulator test: import a font that ships with Android, or go back to the normal font
+        activity?.intent?.getStringExtra("ci_font")?.let { spec ->
+            val app = requireContext().applicationContext
+            Io.work {
+                if (spec == "system") {
+                    Fonts.removeCustom()
+                    android.util.Log.i("ElevateCI", "font reset")
+                } else {
+                    val f = spec.split(',').map { java.io.File(it) }.firstOrNull { it.isFile }
+                    val msg = if (f == null) "no font file found" else f.inputStream().use { Fonts.import(it) } ?: "ok"
+                    android.util.Log.i("ElevateCI", "font import " + (f?.name ?: "-") + ": " + msg)
+                }
+                Io.ui { if (isAdded) fontPref?.value = Prefs.font }
+            }
+        }
         // used by the automated emulator test to look at a lower part of the list
         if (activity?.intent?.getStringExtra("ci_scroll") == "gestures") {
             view.post { gestureLabels.lastOrNull()?.let { scrollToPreference(it.first) } }

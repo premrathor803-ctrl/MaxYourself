@@ -151,7 +151,7 @@ class HomeActivity : BaseActivity(), DrawerHost {
     private fun prefsSignature(): String = listOf(
         Prefs.theme, Prefs.amoled, Prefs.accent, Prefs.wallpaper, Prefs.perf, Prefs.iconShape, Prefs.cols, Prefs.rows,
         Prefs.dockCount, Prefs.iconScale, Prefs.spacing, Prefs.showLabels, Prefs.showClock, Prefs.showSearch,
-        Prefs.drawerStyle, Prefs.drawerCols, Prefs.iconPack, Prefs.getInt("restore_stamp", 0)
+        Prefs.drawerStyle, Prefs.drawerCols, Prefs.iconPack, Prefs.clockStyle, com.elevate.launcher.core.Fonts.signature(), Prefs.getInt("restore_stamp", 0)
     ).joinToString("|")
 
     /** Hooks used by the automated emulator test; harmless otherwise. */
@@ -196,24 +196,49 @@ class HomeActivity : BaseActivity(), DrawerHost {
             gravity = Gravity.CENTER_HORIZONTAL
             setPadding(0, dp(18), 0, dp(6))
         }
-        val clock = TextClock(this).apply {
-            format12Hour = "h:mm"
-            format24Hour = "HH:mm"
+        val style = Prefs.clockStyle
+        val customFont = Prefs.font != "system"
+        fun clockText(f12: String, f24: String, sizeSp: Float, bold: Boolean, light: Boolean): TextClock = TextClock(this).apply {
+            format12Hour = f12
+            format24Hour = f24
             setTextColor(HomeStyle.text)
-            textSize = 52f
-            typeface = Typeface.create("sans-serif-light", Typeface.NORMAL)
+            textSize = sizeSp
+            typeface = if (customFont || bold) com.elevate.launcher.core.Fonts.face(bold)
+                else if (light) Typeface.create("sans-serif-light", Typeface.NORMAL) else Typeface.DEFAULT
             includeFontPadding = false
             if (wall) setShadowLayer(8f, 0f, 2f, 0x88000000.toInt())
         }
-        val date = TextClock(this).apply {
-            format12Hour = "EEEE, d MMMM"
-            format24Hour = "EEEE, d MMMM"
+        fun dateText(sizeSp: Float, fmt: String): TextClock = TextClock(this).apply {
+            format12Hour = fmt
+            format24Hour = fmt
             setTextColor(HomeStyle.dim)
-            textSize = 15f
+            textSize = sizeSp
+            typeface = com.elevate.launcher.core.Fonts.face(false)
             if (wall) setShadowLayer(6f, 0f, 1f, 0x88000000.toInt())
         }
-        clockBox.addView(clock, lp(WRAP, WRAP))
-        clockBox.addView(date, lp(WRAP, WRAP))
+        when (style) {
+            "bold" -> {
+                clockBox.addView(clockText("h:mm", "HH:mm", 56f, true, false), lp(WRAP, WRAP))
+                clockBox.addView(dateText(15f, "EEEE, d MMMM"), lp(WRAP, WRAP))
+            }
+            "stacked" -> {
+                clockBox.addView(clockText("h", "HH", 60f, true, false), lp(WRAP, WRAP))
+                clockBox.addView(clockText("mm", "mm", 60f, false, true), lp(WRAP, WRAP))
+                clockBox.addView(dateText(14f, "EEE, d MMM"), lp(WRAP, WRAP).apply { topMargin = dp(2) })
+            }
+            "compact" -> {
+                clockBox.setPadding(0, dp(12), 0, dp(2))
+                clockBox.addView(clockText("h:mm  ·  EEE, d MMM", "HH:mm  ·  EEE, d MMM", 20f, true, false), lp(WRAP, WRAP))
+            }
+            "analog" -> {
+                clockBox.addView(AnalogClockView(this, HomeStyle.text, Palette.accent, wall), lp(dp(120), dp(120)))
+                clockBox.addView(dateText(14f, "EEEE, d MMMM"), lp(WRAP, WRAP).apply { topMargin = dp(4) })
+            }
+            else -> {
+                clockBox.addView(clockText("h:mm", "HH:mm", 52f, false, true), lp(WRAP, WRAP))
+                clockBox.addView(dateText(15f, "EEEE, d MMMM"), lp(WRAP, WRAP))
+            }
+        }
         content.addView(clockBox, lp(MATCH, WRAP))
         clockBox.visibility = if (Prefs.showClock) View.VISIBLE else View.GONE
 
@@ -462,6 +487,7 @@ class HomeActivity : BaseActivity(), DrawerHost {
         m.menu.add(0, 3, 2, "Add to dock")
         m.menu.add(0, 4, 3, "Rename")
         m.menu.add(0, 5, 4, "Hide in Elevate")
+        m.menu.add(0, 9, 4, "Change group")
         m.menu.add(0, 8, 5, "Change icon")
         m.menu.add(0, 6, 5, "App info")
         m.menu.add(0, 7, 6, "Uninstall")
@@ -483,6 +509,15 @@ class HomeActivity : BaseActivity(), DrawerHost {
                     HomeRepo.removeByKey(e.key)
                     refreshHome(); drawer.refresh()
                     toast("Hidden in Elevate only. Open the drawer menu > Hidden apps to bring it back.")
+                }
+                9 -> {
+                    val mine = com.elevate.launcher.data.GroupOverride.get(e.key)
+                    val names = listOf("Automatic (${e.autoGroup})") + AppCatalog.groups
+                    val shown = names.mapIndexed { i, n -> if ((i == 0 && mine == null) || (i > 0 && names[i] == mine)) "$n  ✓" else n }
+                    Dialogs.list(this, "Show ${e.displayLabel} under", shown) { i ->
+                        com.elevate.launcher.data.GroupOverride.set(e.key, if (i == 0) null else AppCatalog.groups[i - 1])
+                        drawer.refresh()
+                    }
                 }
                 8 -> com.elevate.launcher.ui.IconChooser.show(this, e) { refreshHome(); drawer.refresh() }
                 6 -> Launch.appInfo(this, e.pkg)

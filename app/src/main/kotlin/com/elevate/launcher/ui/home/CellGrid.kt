@@ -50,6 +50,7 @@ class HomeItemView(
         addView(icon, LayoutParams(ctx.dp(48), ctx.dp(48)))
         label.apply {
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
+            typeface = com.elevate.launcher.core.Fonts.face(false)
             setTextColor(textColor)
             maxLines = 1
             ellipsize = TextUtils.TruncateAt.END

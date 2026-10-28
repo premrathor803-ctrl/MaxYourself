@@ -23,6 +23,7 @@ class ElevateApp : Application() {
     override fun onCreate() {
         super.onCreate()
         Prefs.init(this)
+        com.elevate.launcher.core.Fonts.init(this)
         applyNightMode()
         Store.init(this)
         Center.init(this)

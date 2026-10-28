@@ -63,7 +63,7 @@ class PhotoJournalScreen(host: CenterActivity) : Screen(host) {
             return col
         }
 
-        col.addView(host.chips(listOf("all" to "All") + PhotoRepo.kinds.take(3).map { it.first to it.second.replace("Face, ", "").replace(", full body", "") }, filter) {
+        col.addView(host.chips(listOf("all" to "All", "front" to "Face front", "side" to "Face side", "posture" to "Posture"), filter) {
             filter = it
             host.refresh()
         }, lp(MATCH, WRAP).apply { bottomMargin = host.dp(10) })

@@ -5,11 +5,14 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.os.Build
+import com.elevate.launcher.core.Prefs
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicBoolean
 
-class AppEntry(val pkg: String, val cls: String, val label: String, val group: String) {
+class AppEntry(val pkg: String, val cls: String, val label: String, val autoGroup: String) {
     val key: String get() = "$pkg/$cls"
+    /** The group shown in the drawer: the one the person picked, or the automatic guess. */
+    val group: String get() = GroupOverride.get(key) ?: autoGroup
     val component: ComponentName get() = ComponentName(pkg, cls)
     val displayLabel: String
         get() = AppMeta.get(key)?.label?.takeIf { it.isNotBlank() } ?: label
@@ -100,5 +103,46 @@ object AppCatalog {
             p.contains("game") || p.contains("games") -> GAMES
             else -> UTILITIES
         }
+    }
+}
+
+/**
+ * The person's own choice of drawer group for an app, for when the automatic guess is wrong. Kept as one small text
+ * setting, so it is saved in backups with the other settings and cleared by "Reset settings".
+ */
+object GroupOverride {
+    private const val KEY = "app_groups"
+    private var raw = ""
+    private var map: Map<String, String> = emptyMap()
+
+    @Synchronized private fun current(): Map<String, String> {
+        val r = Prefs.sp.getString(KEY, "") ?: ""
+        if (r != raw) {
+            raw = r
+            val m = HashMap<String, String>()
+            try {
+                val o = org.json.JSONObject(if (r.isEmpty()) "{}" else r)
+                val it = o.keys()
+                while (it.hasNext()) {
+                    val k = it.next()
+                    val g = o.optString(k)
+                    if (g in AppCatalog.groups) m[k] = g
+                }
+            } catch (e: Exception) {
+                // a damaged value is simply ignored
+            }
+            map = m
+        }
+        return map
+    }
+
+    fun get(key: String): String? = current()[key]
+
+    @Synchronized fun set(key: String, group: String?) {
+        val m = HashMap(current())
+        if (group == null || group !in AppCatalog.groups) m.remove(key) else m[key] = group
+        val o = org.json.JSONObject()
+        for ((k, v) in m) o.put(k, v)
+        Prefs.putString(KEY, if (m.isEmpty()) "" else o.toString())
     }
 }
