@@ -33,6 +33,11 @@ jobs:
         with:
           gradle-version: '8.7'
 
+      - name: Run unit tests
+        run: |
+          set -o pipefail
+          gradle testDebugUnitTest --no-daemon --stacktrace 2>&1 | tee test.log
+
       - name: Build debug APK
         run: |
           set -o pipefail
@@ -47,8 +52,9 @@ jobs:
             echo "Build FAILED for ${GITHUB_SHA::7} (run ${{ github.run_number }})"
             echo
             echo '```'
-            grep -E '^(e: |ERROR:|.*error:|.*AAPT)' build.log | head -80 || true
-            sed -n '/What went wrong/,/\* Try/p' build.log | head -50 || true
+            grep -E '^(e: |ERROR:|.*error:|.*AAPT)' build.log test.log | head -80 || true
+            grep -E 'FAILED|AssertionError|expected:' test.log | head -30 || true
+            sed -n '/What went wrong/,/\* Try/p' build.log test.log | head -50 || true
             echo '```'
           } | head -c 60000 > report.md
           gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/comments" -F body=@report.md

@@ -25,6 +25,7 @@ object Launch {
                 ctx.startActivity(i)
             }
             AppMeta.touch("$pkg/$cls")
+            com.elevate.launcher.gaming.Play.onLaunched(ctx, "$pkg/$cls")
             true
         } catch (e: Exception) {
             ctx.toast("This app is no longer available")

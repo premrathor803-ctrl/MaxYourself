@@ -261,6 +261,21 @@ sleep 2
 tap_label "Leave Gaming mode"
 sleep 2
 shot gm3-gaming-off
+# ---- Gaming v2: open a game from Elevate, come back, and check the session was tracked (the minimum length is lowered for the test)
+timeout 45 adb shell am start -W -n "$PKG/.gaming.GamingActivity" --es ci_gaming_pkg com.android.settings --ez ci_gaming_launch true --el ci_play_min_ms 1000 < /dev/null >> out/starts.txt 2>&1
+sleep 9
+shot gv1-game-opened
+timeout 45 adb shell am start -W -n "$PKG/.gaming.GamingActivity" --ez ci_gaming_report true < /dev/null >> out/starts.txt 2>&1
+sleep 4
+shot gv2-session-tracked
+timeout 45 adb shell am start -W -n "$PKG/.gaming.GamingActivity" --ez ci_gaming_seed true < /dev/null >> out/starts.txt 2>&1
+sleep 5
+shot gv3-history-chart
+tap_label "⋯"
+sleep 2
+shot gv4-game-settings
+timeout 45 adb shell input keyevent KEYCODE_BACK < /dev/null
+sleep 1
 timeout 45 adb shell am start -W -n "$PKG/.ui.home.HomeActivity" --es ci_action lock < /dev/null >> out/starts.txt 2>&1
 sleep 2
 shot gm4-lock-gesture-dialog
@@ -300,6 +315,10 @@ adb logcat -d -s AndroidRuntime:E ActivityManager:E > out/runtime.txt 2>&1 || tr
   echo "Self-test output from the app (ElevateCI log lines):"
   echo '```'
   head -c 4000 out/ci-log.txt
+  echo '```'
+  echo "Gaming tracking self-check (open a game from Elevate, come back: expect game_sessions=1 tracked=1 active=false):"
+  echo '```'
+  grep "game_sessions" out/ci-log.txt | head -5
   echo '```'
   echo "Widgets known to Android for Elevate:"
   echo '```'

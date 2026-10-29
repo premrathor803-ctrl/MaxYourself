@@ -28,8 +28,17 @@ class ReminderReceiver : BroadcastReceiver() {
 /** Puts the alarm back after a restart, an app update, or a clock or time-zone change. */
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        // A Gaming mode session does not survive a restart: leave it, and give Do Not Disturb back if we changed it.
-        try { if (com.elevate.launcher.gaming.Gaming.on) com.elevate.launcher.gaming.Gaming.stop(context) } catch (t: Throwable) { android.util.Log.e("Elevate", "gaming reset failed", t) }
+        when (intent.action) {
+            Intent.ACTION_BOOT_COMPLETED -> {
+                // A Gaming mode or play session does not survive a restart: leave them, and give Do Not Disturb back if we changed it.
+                try { com.elevate.launcher.gaming.Play.clearAfterBoot(context) } catch (t: Throwable) { android.util.Log.e("Elevate", "play reset failed", t) }
+                try { if (com.elevate.launcher.gaming.Gaming.on) com.elevate.launcher.gaming.Gaming.stop(context) } catch (t: Throwable) { android.util.Log.e("Elevate", "gaming reset failed", t) }
+            }
+            Intent.ACTION_MY_PACKAGE_REPLACED -> {
+                // Updating the app removes its alarms; the session itself is still going, so set them again.
+                try { com.elevate.launcher.gaming.Gaming.scheduleBreak(context); com.elevate.launcher.gaming.Play.restoreAlarm(context) } catch (t: Throwable) { android.util.Log.e("Elevate", "gaming alarms failed", t) }
+            }
+        }
         try { Reminders.reschedule(context) } catch (t: Throwable) { android.util.Log.e("Elevate", "boot reschedule failed", t) }
     }
 }

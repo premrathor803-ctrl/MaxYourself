@@ -64,4 +64,6 @@ dependencies {
     implementation("androidx.preference:preference-ktx:1.2.1")
     implementation("androidx.biometric:biometric:1.1.0")
     implementation("androidx.exifinterface:exifinterface:1.3.7")
+
+    testImplementation("junit:junit:4.13.2")
 }

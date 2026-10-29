@@ -50,6 +50,7 @@ import com.elevate.launcher.ui.onboarding.OnboardingActivity
 import com.elevate.launcher.ui.settings.SettingsActivity
 import com.elevate.launcher.gaming.Gaming
 import com.elevate.launcher.gaming.GamingActivity
+import com.elevate.launcher.gaming.Play
 import com.elevate.launcher.gestures.Flashlight
 import com.elevate.launcher.gestures.LockService
 import com.elevate.launcher.widgets.TodayWidget
@@ -134,6 +135,7 @@ class HomeActivity : BaseActivity(), DrawerHost {
         AppCatalog.refreshIfStale(this)
         maybeSeed()
         refreshHome()
+        Play.noteReturn(this)
         gamingBanner.visibility = if (Gaming.on) View.VISIBLE else View.GONE
     }
 

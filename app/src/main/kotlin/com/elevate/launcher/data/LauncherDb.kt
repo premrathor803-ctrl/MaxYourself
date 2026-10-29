@@ -5,7 +5,7 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 
 /** Home layout + per-app metadata. The Center (habits, workouts...) has its own database. */
-class LauncherDb(ctx: Context) : SQLiteOpenHelper(ctx.applicationContext, "launcher.db", null, 2) {
+class LauncherDb(ctx: Context) : SQLiteOpenHelper(ctx.applicationContext, "launcher.db", null, 3) {
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
@@ -21,6 +21,18 @@ class LauncherDb(ctx: Context) : SQLiteOpenHelper(ctx.applicationContext, "launc
                 "last_used INTEGER NOT NULL DEFAULT 0, icon TEXT NOT NULL DEFAULT '')"
         )
         createWidgets(db)
+        createGaming(db)
+    }
+
+    private fun createGaming(db: SQLiteDatabase) {
+        // kind: tracked (started from Elevate) or manual (typed in). end_kind says how the end time was decided.
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS game_sessions (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, key TEXT NOT NULL, name TEXT NOT NULL, " +
+                "start_ms INTEGER NOT NULL, end_ms INTEGER NOT NULL, kind TEXT NOT NULL, " +
+                "end_kind TEXT NOT NULL DEFAULT '', note TEXT NOT NULL DEFAULT '')"
+        )
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_game_sessions_start ON game_sessions(start_ms)")
     }
 
     private fun createWidgets(db: SQLiteDatabase) {
@@ -34,6 +46,7 @@ class LauncherDb(ctx: Context) : SQLiteOpenHelper(ctx.applicationContext, "launc
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         // Upgrades only add columns or tables; user data is never dropped.
         if (oldVersion < 2) createWidgets(db)
+        if (oldVersion < 3) createGaming(db)
     }
 }
 

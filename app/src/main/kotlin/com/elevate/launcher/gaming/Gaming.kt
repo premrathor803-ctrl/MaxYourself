@@ -24,7 +24,7 @@ import com.elevate.launcher.data.AppEntry
  */
 object Gaming {
     const val ACTION_BREAK = "com.elevate.launcher.GAMING_BREAK"
-    private const val CHANNEL = "gaming"
+    const val CHANNEL = "gaming"
     private const val BREAK_NOTIF_ID = 5001
     private const val BREAK_REQ = 5002
 
@@ -60,34 +60,69 @@ object Gaming {
     fun start(ctx: Context) {
         val app = ctx.applicationContext
         Prefs.sp.edit().putBoolean("gaming_on", true).putLong("gaming_started", System.currentTimeMillis()).commit()
-        if (muteOthers && dndAllowed(app) && !Prefs.sp.getBoolean("gaming_dnd_set", false)) {
-            try {
-                val nm = app.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-                val prev = nm.currentInterruptionFilter
-                nm.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_PRIORITY)
-                Prefs.sp.edit().putInt("gaming_prev_filter", prev).putBoolean("gaming_dnd_set", true).commit()
-            } catch (t: Throwable) {
-                android.util.Log.w("Elevate", "could not change Do Not Disturb", t)
-            }
-        }
+        refreshDnd(app)
         scheduleBreak(app)
     }
 
     fun stop(ctx: Context) {
         val app = ctx.applicationContext
         Prefs.sp.edit().putBoolean("gaming_on", false).commit()
-        if (Prefs.sp.getBoolean("gaming_dnd_set", false)) {
-            try {
-                val nm = app.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        refreshDnd(app)
+        cancelBreak(app)
+    }
+
+    /**
+     * Makes Do Not Disturb match what is wanted right now: Gaming mode with "silence other notifications" ticked, or a game
+     * whose own profile asks for it. It only ever acts when the person has allowed Do Not Disturb access, remembers what
+     * the setting was before, and puts that back when neither reason applies any more.
+     */
+    fun refreshDnd(ctx: Context) {
+        val app = ctx.applicationContext
+        val playing = Play.active
+        val wanted = ((on && muteOthers) || (playing != null && GameStore.profile(playing.key).dnd)) && dndAllowed(app)
+        val isSet = Prefs.sp.getBoolean("gaming_dnd_set", false)
+        try {
+            val nm = app.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            if (wanted && !isSet) {
+                val prev = nm.currentInterruptionFilter
+                nm.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_PRIORITY)
+                Prefs.sp.edit().putInt("gaming_prev_filter", prev).putBoolean("gaming_dnd_set", true).commit()
+            } else if (!wanted && isSet) {
                 val prev = Prefs.getInt("gaming_prev_filter", NotificationManager.INTERRUPTION_FILTER_ALL)
                 val ok = prev in NotificationManager.INTERRUPTION_FILTER_ALL..NotificationManager.INTERRUPTION_FILTER_ALARMS
                 if (nm.isNotificationPolicyAccessGranted) nm.setInterruptionFilter(if (ok) prev else NotificationManager.INTERRUPTION_FILTER_ALL)
-            } catch (t: Throwable) {
-                android.util.Log.w("Elevate", "could not restore Do Not Disturb", t)
+                Prefs.sp.edit().putBoolean("gaming_dnd_set", false).commit()
             }
-            Prefs.sp.edit().putBoolean("gaming_dnd_set", false).commit()
+        } catch (t: Throwable) {
+            android.util.Log.w("Elevate", "could not change Do Not Disturb", t)
         }
-        cancelBreak(app)
+    }
+
+    /** True when [key] is one of the person's games (their own list, or the automatic Games group when no list was made). */
+    fun isGame(key: String): Boolean {
+        val chosen = apps
+        if (chosen.isNotEmpty()) return key in chosen
+        return AppCatalog.get(key)?.group == AppCatalog.GAMES
+    }
+
+    /** Drops list entries for apps that are no longer installed. Only runs once the app list is known. */
+    fun pruneMissing() {
+        if (!AppCatalog.loaded) return
+        val chosen = apps
+        if (chosen.isEmpty()) return
+        val kept = chosen.filter { AppCatalog.get(it) != null }.toSet()
+        if (kept.size != chosen.size) apps = kept
+    }
+
+    fun ensureChannel(ctx: Context) {
+        if (Build.VERSION.SDK_INT >= 26) {
+            val nm = ctx.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            if (nm.getNotificationChannel(CHANNEL) == null) {
+                val ch = NotificationChannel(CHANNEL, "Gaming reminders", NotificationManager.IMPORTANCE_LOW)
+                ch.description = "Gentle break and session reminders while you play."
+                nm.createNotificationChannel(ch)
+            }
+        }
     }
 
     // ------------------------------------------------------------ break nudges
@@ -110,14 +145,7 @@ object Gaming {
 
     fun onBreak(ctx: Context) {
         if (!on) return
-        if (Build.VERSION.SDK_INT >= 26) {
-            val nm = ctx.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            if (nm.getNotificationChannel(CHANNEL) == null) {
-                val ch = NotificationChannel(CHANNEL, "Gaming breaks", NotificationManager.IMPORTANCE_LOW)
-                ch.description = "A gentle nudge to take a short break while Gaming mode is on."
-                nm.createNotificationChannel(ch)
-            }
-        }
+        ensureChannel(ctx)
         val mins = ((System.currentTimeMillis() - startedAt) / 60000L).toInt().coerceAtLeast(1)
         val open = PendingIntent.getActivity(ctx, BREAK_REQ, Intent(ctx, GamingActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
@@ -140,8 +168,9 @@ object Gaming {
 
 class GamingReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action == Gaming.ACTION_BREAK) {
-            try { Gaming.onBreak(context) } catch (t: Throwable) { android.util.Log.e("Elevate", "break nudge failed", t) }
+        when (intent.action) {
+            Gaming.ACTION_BREAK -> try { Gaming.onBreak(context) } catch (t: Throwable) { android.util.Log.e("Elevate", "break nudge failed", t) }
+            Play.ACTION_REMIND -> try { Play.onRemind(context) } catch (t: Throwable) { android.util.Log.e("Elevate", "session reminder failed", t) }
         }
     }
 }
