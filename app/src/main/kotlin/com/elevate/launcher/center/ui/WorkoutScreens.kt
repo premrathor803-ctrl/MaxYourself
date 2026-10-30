@@ -312,6 +312,9 @@ class ExerciseDetailScreen(host: CenterActivity, private val ex: Exercise) : Scr
             poseView(ex.key, ex.name)
             para(poseHint(ex.key), sp = 12f, bottom = 0)
         }
+        if (com.elevate.launcher.center.content.Movement.isMovement(ex.key)) {
+            col.movementLogCard(host, ex.key, ex.name, com.elevate.launcher.center.content.Movement.suggestion(ex))
+        }
         col.heading("Starting position", 8)
         col.para(ex.startPos, dim = false)
         col.heading("How to do it", 8)

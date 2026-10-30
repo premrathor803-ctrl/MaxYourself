@@ -163,3 +163,65 @@ object CareRepo {
 
     fun delete(id: Long) { Center.db.delete("care_log", "id=?", arrayOf(id.toString())) }
 }
+
+
+// ------------------------------------------------------------------ movement done and physical activity (entered by hand)
+class Activity(val id: Long, var day: String, var kind: String, var ref: String, var label: String, var minutes: Int, var note: String)
+
+object ActivityRepo {
+    /** An item from the posture and mobility library that the person marked as done. */
+    const val KIND_EXERCISE = "exercise"
+    /** Physical activity the person typed in (a walk, a match, a swim). */
+    const val KIND_ACTIVITY = "activity"
+
+    private const val COLS = "id, day, kind, ref, label, minutes, note"
+
+    private fun read(c: android.database.Cursor) =
+        Activity(c.getLong(0), c.getString(1), c.getString(2), c.getString(3), c.getString(4), c.getInt(5), c.getString(6))
+
+    fun between(from: String, to: String): List<Activity> {
+        val c = Center.db.rawQuery("SELECT $COLS FROM activity WHERE day >= ? AND day <= ? ORDER BY day DESC, id DESC", arrayOf(from, to))
+        val out = ArrayList<Activity>()
+        c.use { while (it.moveToNext()) out.add(read(it)) }
+        return out
+    }
+
+    fun recent(limit: Int): List<Activity> {
+        val c = Center.db.rawQuery("SELECT $COLS FROM activity ORDER BY day DESC, id DESC LIMIT $limit", null)
+        val out = ArrayList<Activity>()
+        c.use { while (it.moveToNext()) out.add(read(it)) }
+        return out
+    }
+
+    fun get(id: Long): Activity? {
+        val c = Center.db.rawQuery("SELECT $COLS FROM activity WHERE id=?", arrayOf(id.toString()))
+        return c.use { if (it.moveToFirst()) read(it) else null }
+    }
+
+    fun count(): Int {
+        val c = Center.db.rawQuery("SELECT COUNT(*) FROM activity", null)
+        return c.use { if (it.moveToFirst()) it.getInt(0) else 0 }
+    }
+
+    /** Is this library item already marked done on that day? Used so a repeated tap does not add it twice. */
+    fun doneOn(ref: String, day: String): Boolean {
+        val c = Center.db.rawQuery("SELECT COUNT(*) FROM activity WHERE kind=? AND ref=? AND day=?", arrayOf(KIND_EXERCISE, ref, day))
+        return c.use { it.moveToFirst() && it.getInt(0) > 0 }
+    }
+
+    /** How many days each library item was marked done on or after [from]. */
+    fun doneCounts(from: String): Map<String, Int> {
+        val out = HashMap<String, Int>()
+        val c = Center.db.rawQuery("SELECT ref, COUNT(DISTINCT day) FROM activity WHERE kind=? AND day >= ? GROUP BY ref", arrayOf(KIND_EXERCISE, from))
+        c.use { while (it.moveToNext()) out[it.getString(0)] = it.getInt(1) }
+        return out
+    }
+
+    private fun values(a: Activity) = ContentValues().apply {
+        put("day", a.day); put("kind", a.kind); put("ref", a.ref); put("label", a.label); put("minutes", a.minutes); put("note", a.note)
+    }
+
+    fun add(a: Activity): Long = Center.db.insert("activity", null, values(a))
+    fun update(a: Activity) { Center.db.update("activity", values(a), "id=?", arrayOf(a.id.toString())) }
+    fun delete(id: Long) { Center.db.delete("activity", "id=?", arrayOf(id.toString())) }
+}

@@ -135,6 +135,7 @@ class CenterActivity : BaseActivity() {
             override fun handleOnBackPressed() { back() }
         })
 
+        intent.getStringExtra("ci_height_unit")?.let { Center.heightUnit = it }
         stack.add(DashboardScreen(this))
         com.elevate.launcher.data.Io.work { com.elevate.launcher.reminders.Reminders.reschedule(applicationContext) }
         if (intent.getBooleanExtra("ci_seed", false)) CenterSeed.run()
@@ -144,6 +145,17 @@ class CenterActivity : BaseActivity() {
         if (section != null && section != "home") openSection(section, false)
         show()
         started = true
+        ciGrowthHooks()
+    }
+
+    /** Hooks used only by the automated emulator test; harmless otherwise. */
+    private fun ciGrowthHooks() {
+        val sdp = intent.getIntExtra("ci_scroll_dp", 0)
+        if (sdp > 0) body.postDelayed({ scroll?.scrollTo(0, dp(sdp)) }, 1500)
+        if (intent.getBooleanExtra("ci_growth_selftest", false)) GrowthSelfTest.run(applicationContext)
+        if (intent.getBooleanExtra("ci_height_add", false)) {
+            body.postDelayed({ HeightEditor.open(this, null, com.elevate.launcher.center.data.MeasureRepo.list("height")) { refresh() } }, 1800)
+        }
     }
 
     override fun onResume() {
@@ -269,7 +281,7 @@ class CenterActivity : BaseActivity() {
 
     /**
      * Opens a named section on top of the dashboard. Understands "habits", "workouts", "grooming", "posture",
-     * "goals", "progress", "learn", "settings", "height", "sleep" and deep links "article:key", "exercise:key", "plan:key".
+     * "goals", "progress", "learn", "settings", "height" (or "growth"), "movement", "activity", "heightlist", "growthsummary", "sleep" and deep links "article:key", "exercise:key", "plan:key".
      */
     fun openSection(section: String, render: Boolean = true) {
         val screen: Screen? = when {
@@ -281,7 +293,11 @@ class CenterActivity : BaseActivity() {
             section == "progress" -> ProgressScreen(this)
             section == "learn" -> LearnScreen(this)
             section == "settings" -> CenterSettingsScreen(this)
-            section == "height" -> HeightScreen(this)
+            section == "height" || section == "growth" -> GrowthScreen(this)
+            section == "movement" -> MovementLibraryScreen(this)
+            section == "activity" -> ActivityScreen(this)
+            section == "heightlist" -> HeightHistoryScreen(this)
+            section == "growthsummary" -> GrowthSummaryScreen(this)
             section == "sleep" -> SleepScreen(this)
             section == "library" -> ExerciseLibraryScreen(this, null)
             section == "history" -> HistoryScreen(this)

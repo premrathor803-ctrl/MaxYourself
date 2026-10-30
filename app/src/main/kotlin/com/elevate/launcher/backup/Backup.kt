@@ -32,7 +32,7 @@ object Backup {
     const val VERSION = 1
     const val MAX_BYTES = 30 * 1024 * 1024
 
-    private val CENTER_TABLES = listOf("habits", "habit_log", "sessions", "session_ex", "measures", "goals", "goal_entries", "sleep", "care_log", "kv")
+    private val CENTER_TABLES = listOf("habits", "habit_log", "sessions", "session_ex", "measures", "goals", "goal_entries", "sleep", "care_log", "activity", "kv")
     private val KEEP_PREFS = setOf("onboarded", "seeded")
     private val AREAS = setOf("page", "dock", "folder")
     private val KINDS = setOf("app", "folder", "center")

@@ -15,6 +15,9 @@ class Ingredient(val name: String, val what: String, val watch: String)
 object Articles {
     const val DISCLAIMER = "This is general information to help you learn. It is not medical advice and cannot diagnose or treat anything. If something worries you, talk to a qualified doctor."
 
+    /** The height and growth guide, in reading order. */
+    val growthGuide = listOf("growth_how", "growth_genes_puberty", "growth_basics", "growth_posture_bone", "growth_claims", "growth_doctor", "measure_height", "height_facts")
+
     val groups = listOf("Skincare", "Hair", "Hygiene", "Posture", "Height & growth", "Sleep", "Nutrition", "Habits", "Training basics")
 
     private fun a(key: String, group: String, title: String, summary: String, vararg secs: Sec) =
@@ -127,6 +130,47 @@ object Articles {
             s("Reading the numbers", "Differences of under a centimetre between measurements are usually just measurement error. Do not read a trend into one or two readings.")),
 
         // ------------------------------------------------------------ sleep
+        a("growth_how", "Height & growth", "How growth works, from childhood to the late teens",
+            "Bones lengthen at growth plates. Growth is steady, speeds up in puberty, then stops.",
+            s("The short version", "Height comes from bones getting longer. In children and teens this happens at the growth plates: areas of cartilage near the ends of the long bones, mostly in the legs and spine. Growth is steady in childhood, speeds up during the puberty growth spurt, then slows and stops once the plates harden and close.", "How sure is this? Established."),
+            s("Typical timing (with wide variation)", "• Between early childhood and puberty, children typically grow about 5 to 6 cm a year.", "• At the fastest point of the puberty spurt, typically about 8 to 10 cm a year.", "• In girls the spurt usually starts around 9 to 12 and peaks around 11 to 12. In boys it usually starts around 11 to 14 and peaks around 13 to 14.", "• Most girls are close to their adult height by about 15 to 16. Many boys keep growing slowly until about 17 to 18, and some a little longer.", "These are typical figures, not targets. Healthy people start and finish earlier or later."),
+            s("After growth stops", "Once the growth plates have closed, bones cannot get longer. That is why this app does not promise to make anyone taller: there is nothing a stretch, food or supplement can do to lengthen adult bones."),
+            s("What a tracker can and cannot do", "Recording your own height every few months shows your own pattern over time. It cannot tell you whether your growth is normal, or predict how tall you will be. A doctor can compare your measurements with growth charts.")),
+        a("growth_genes_puberty", "Height & growth", "Genes, puberty timing and why everyone is different",
+            "Genes explain most of the differences in adult height. Puberty timing varies a lot.",
+            s("Genes do most of the work", "Studies of families and twins find that genes explain most of the differences in adult height between people in well-fed populations, often estimated at around 80 percent. The rest comes from nutrition, health and environment. Parents' heights are a rough guide, not a promise: brothers and sisters can end up quite different.", "How sure is this? Established."),
+            s("Puberty timing varies", "Starting puberty earlier or later inside the normal range is common and often runs in families. Early developers are often taller than classmates for a while, and others catch up. Later developers usually grow for longer, so being the shortest in the class at 13 says little about adult height.", "How sure is this? Established."),
+            s("Comparing yourself", "Comparing with friends at one moment is misleading, because each person's growth spurt comes at a different time. Your own readings over months, taken the same way, tell you far more."),
+            s("Worried?", "If you are concerned about your growth or puberty, a doctor can help. See \"When to talk to a doctor\".")),
+        a("growth_basics", "Height & growth", "Sleep, food and movement: the basics that support healthy growth",
+            "They help you grow the way your genes allow. They do not add height beyond that.",
+            s("The key idea", "Growth needs enough energy, nutrients, sleep and general health. Long-term undernutrition or an untreated illness can slow growth, and treating the cause can help a young person grow as their genes allow. That is different from growing taller than their genes allow, which nothing is known to do.", "How sure is this? Established."),
+            s("Eating", "• Regular meals with a mix of foods: protein (eggs, dairy, pulses, fish, meat or alternatives), fruit and vegetables, whole grains.", "• Calcium sources (dairy or fortified alternatives, leafy greens) and vitamin D (daylight, fortified foods, or as your doctor advises).", "• Skipping meals, crash diets or cutting out whole food groups while you are still growing is risky. If food or weight worries you, talk to a doctor or a trusted adult.", "No single food makes you taller than your genes allow."),
+            s("Sleep", "Teens are generally advised to get about 8 to 10 hours of sleep a night. Growth hormone is released in pulses, with a large one in deep sleep, which is one reason regular sleep matters. Getting enough, regularly, is the goal: more than you need has not been shown to add height.", "How sure is this? Established for needing enough sleep. Uncertain for any extra benefit."),
+            s("Movement", "Regular activity supports strong bones, muscles and mood. Weight-bearing activities such as running, jumping and sports help build bone in the teen years. Strength training with good technique and sensible supervision is considered safe for teens and does not stunt growth. Extreme training, or a body weight that is too low, can harm growth and health.", "How sure is this? Established."),
+            s("Supplements", "Most young people who eat a varied diet do not need height or growth supplements. Ask a doctor before taking any supplement, because high doses of some vitamins and minerals are harmful.")),
+        a("growth_posture_bone", "Height & growth", "Posture is not the same as bone growth",
+            "Standing tall can show your full height. It does not make bones longer.",
+            s("Two different things", "Bone growth happens at the growth plates and sets how tall you can be. Posture is how you hold your body, using muscles and joints. They are separate."),
+            s("What posture can change", "Slouching can make you look and measure a little shorter, often by up to a centimetre or two, because the curves of the spine are exaggerated. Standing tall brings you back to your full measured height. It does not add to it. Your spine's discs also compress a little through the day, so most people are slightly shorter in the evening than in the morning.", "How sure is this? Established."),
+            s("Slouching does not stunt growth", "There is no good evidence that sitting badly or carrying a school bag stops bones from growing. Comfort still matters: long periods in one position, or a heavy bag on one shoulder, can leave you stiff or sore. Change position often and keep bags light, carried on both shoulders."),
+            s("What helps", "• Move often: change position every 30 to 60 minutes.", "• Build gentle strength in the back and core, and keep shoulders and hips moving. The posture and mobility library has beginner-friendly options.", "• Set a screen at about eye level."),
+            s("Not a treatment", "These activities do not lengthen bones or treat scoliosis or other spine conditions. If one shoulder or hip looks higher, you can see a curve, or you have back pain that keeps coming back, see a doctor.")),
+        a("growth_claims", "Height & growth", "Claims to be careful about",
+            "What the evidence says about stretching, pills, hormones and other height claims.",
+            s("Stretching or hanging", "Stretching can improve flexibility and feel good. It can also ease disc compression for a while, so you may measure slightly taller for a few hours. There is no evidence that it lengthens bones permanently.", "Verdict: partly true, mostly misleading."),
+            s("Height pills and supplements", "No supplement has been shown to make healthy people taller. Some products contain ingredients that are not on the label, and high doses of some vitamins and minerals are harmful.", "Verdict: not supported. Ask a doctor first."),
+            s("Growth hormone", "Prescribed by specialists for particular medical conditions, with monitoring. Using it without a medical reason, or from an unregulated source, can cause serious harm. Never use hormones without medical supervision.", "Verdict: medical treatment only, not a shortcut."),
+            s("Lifting weights or caffeine stunt growth", "There is no good evidence for either. Supervised strength training is considered safe for teens. Caffeine in small amounts has not been shown to affect height, but a lot of it can ruin sleep, and sleep matters.", "Verdict: myths."),
+            s("Special shoes and insoles", "They make your shoes taller, not you.", "Verdict: true but not what it sounds like."),
+            s("Surgery", "Limb-lengthening is a major medical procedure used for specific conditions, with real risks and a long recovery. It is not a cosmetic shortcut and is outside what this app covers."),
+            s("How to judge a claim", "• Who earns money if you believe it?", "• Was it tested on people like you, with a comparison group?", "• Does it promise an exact number of centimetres? Honest sources do not.", "• Before-and-after photos prove very little: lighting, posture and time of day change how tall someone looks.")),
+        a("growth_doctor", "Height & growth", "When to talk to a doctor",
+            "Signs that are worth a check, and what a doctor can do that an app cannot.",
+            s("Worth a conversation", "• You seem to be growing much more slowly than before, or have not grown for a year or more while still young.", "• No signs of puberty starting by about 13 for girls or 14 for boys, or puberty starting very early (before about 8 for girls or 9 for boys).", "• You are a lot shorter or taller than others your age and than your parents' heights would suggest.", "• Back or bone pain that keeps coming back, one shoulder or hip clearly higher, a visible curve in the spine, or limping.", "• Feeling unwell, very tired, or losing or gaining weight without trying, along with slow growth."),
+            s("What a doctor can do", "A doctor can measure you accurately, plot your height on a growth chart for your age, ask about family heights, check how far puberty has progressed, and arrange tests such as a bone-age X-ray if needed. Very often the answer is reassurance that growth is normal for you."),
+            s("Using your records", "You can bring the dates and readings from this app and say how you measured. Self-measured readings are less accurate than clinic measurements, and this app cannot tell you whether your growth is normal."),
+            s("It is normal to ask", "Asking about growth or puberty is common and nothing to be embarrassed about. A parent, school nurse or family doctor is a good first person to talk to.")),
         a("sleep_basics", "Sleep", "Sleep basics",
             "Regular, enough sleep supports energy, mood, learning and recovery.",
             s("How much", "Most teenagers do best with about 8 to 10 hours, and most adults with 7 to 9. Needs vary between people."),
@@ -212,6 +256,9 @@ object Starters {
         StarterHabit("Posture break", "Stand up, roll your shoulders, reset your sitting position.", "Posture", "anytime", "weekdays", 31, 0, ""),
         StarterHabit("Bedtime routine", "Start winding down at your set time.", "Sleep", "evening", "daily", 127, 0, ""),
         StarterHabit("Read for 10 minutes", "Any book, any topic.", "Learning", "evening", "daily", 127, 0, "10 min"),
+        StarterHabit("Mobility session", "About 10 minutes of gentle moves from the posture and mobility library.", "Posture", "anytime", "custom", 21, 0, "10 min"),
+        StarterHabit("Regular sleep time", "Go to bed and get up at about the same times.", "Sleep", "evening", "daily", 127, 0, ""),
+        StarterHabit("Regular balanced meals", "Eat regular meals with a mix of foods. No strict rules.", "Nutrition", "anytime", "daily", 127, 0, ""),
         StarterHabit("Complete a planned workout", "Counts automatically when you finish a workout in this app.", "Fitness", "anytime", "custom", 21, 1, "")
     )
 }

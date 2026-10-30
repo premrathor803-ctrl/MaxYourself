@@ -20,7 +20,17 @@ center-player .center.ui.CenterActivity --es section player:beginner_full_a
 center-history .center.ui.CenterActivity --es section history
 center-grooming .center.ui.CenterActivity --es section grooming
 center-posture .center.ui.CenterActivity --es section posture
-center-height .center.ui.CenterActivity --es section height
+center-growth .center.ui.CenterActivity --es section growth
+center-growth-chart .center.ui.CenterActivity --es section growth --ei ci_scroll_dp 330
+center-growth-ftin .center.ui.CenterActivity --es section growth --es ci_height_unit ftin --ei ci_scroll_dp 330
+center-heightlist .center.ui.CenterActivity --es section heightlist --es ci_height_unit cm
+center-height-add .center.ui.CenterActivity --es section growth --ez ci_height_add true
+center-activity .center.ui.CenterActivity --es section activity
+center-movement .center.ui.CenterActivity --es section movement
+center-exercise-log .center.ui.CenterActivity --es section exercise:chin_tuck
+center-growth-summary .center.ui.CenterActivity --es section growthsummary
+center-article-growth .center.ui.CenterActivity --es section article:growth_how
+center-growth-selftest .center.ui.CenterActivity --es section growth --ez ci_growth_selftest true
 center-sleep .center.ui.CenterActivity --es section sleep
 center-goals .center.ui.CenterActivity --es section goals
 center-progress .center.ui.CenterActivity --es section progress

@@ -38,6 +38,27 @@ jobs:
           set -o pipefail
           gradle testDebugUnitTest --no-daemon --stacktrace 2>&1 | tee test.log
 
+      - name: Report unit test results
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 - <<'PY' > unit-tests.md
+          import glob, xml.etree.ElementTree as ET
+          t = f = e = s = 0
+          lines = []
+          for p in sorted(glob.glob('app/build/test-results/testDebugUnitTest/*.xml')):
+              r = ET.parse(p).getroot()
+              n, nf, ne, ns = (int(r.get(k) or 0) for k in ('tests', 'failures', 'errors', 'skipped'))
+              t += n; f += nf; e += ne; s += ns
+              lines.append('%s: %d tests, %d failures' % (r.get('name'), n, nf + ne))
+          print('Unit tests (JVM, ran in CI): total=%d failures=%d errors=%d skipped=%d' % (t, f, e, s))
+          print('```')
+          print('\n'.join(lines))
+          print('```')
+          PY
+          cat unit-tests.md
+          gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/comments" -F body=@unit-tests.md > /dev/null || true
+
       - name: Build debug APK
         run: |
           set -o pipefail

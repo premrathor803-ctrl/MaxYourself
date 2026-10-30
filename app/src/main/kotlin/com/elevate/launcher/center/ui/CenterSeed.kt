@@ -2,6 +2,8 @@ package com.elevate.launcher.center.ui
 
 import com.elevate.launcher.center.content.Plans
 import com.elevate.launcher.center.content.Starters
+import com.elevate.launcher.center.data.Activity
+import com.elevate.launcher.center.data.ActivityRepo
 import com.elevate.launcher.center.data.Center
 import com.elevate.launcher.center.data.Days
 import com.elevate.launcher.center.data.Goal
@@ -59,6 +61,11 @@ object CenterSeed {
             val wake = if (i % 3 == 0) "06:30" else "07:00"
             SleepRepo.save(SleepEntry(Days.add(today, -i), bed, wake, 2 + i % 3, ""))
         }
+
+        ActivityRepo.add(Activity(0, today, ActivityRepo.KIND_EXERCISE, "cat_cow", "Cat–cow", 0, ""))
+        ActivityRepo.add(Activity(0, Days.add(today, -1), ActivityRepo.KIND_EXERCISE, "chin_tuck", "Chin tuck", 0, ""))
+        ActivityRepo.add(Activity(0, Days.add(today, -2), ActivityRepo.KIND_ACTIVITY, "", "Walk", 30, ""))
+        ActivityRepo.add(Activity(0, Days.add(today, -4), ActivityRepo.KIND_ACTIVITY, "", "Football or cricket", 60, ""))
 
         GoalRepo.insert(Goal(0, "Twelve workouts this month", "", GoalRepo.KIND_WORKOUTS, 0L, 12.0, "", Days.add(today, -20), Days.add(today, 10), "", false))
     }

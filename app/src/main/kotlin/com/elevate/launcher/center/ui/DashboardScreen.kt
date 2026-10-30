@@ -92,7 +92,7 @@ class DashboardScreen(host: CenterActivity) : Screen(host) {
         )
         col.tileRow(
             Triple("Photo journal", "Private progress photos", { host.openSection("photos") }),
-            null
+            Triple("Height and growth", "Tracker, movement, guides", { host.openSection("growth") })
         )
         col.noteCard("General fitness and wellness information. It is not medical advice, and nothing here rates your looks or promises to change your height. Everything stays on this phone.")
         return col

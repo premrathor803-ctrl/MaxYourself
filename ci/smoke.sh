@@ -320,6 +320,10 @@ adb logcat -d -s AndroidRuntime:E ActivityManager:E > out/runtime.txt 2>&1 || tr
   echo '```'
   grep "game_sessions" out/ci-log.txt | head -5
   echo '```'
+  echo "Height and growth self-check (add, edit, delete, duplicate check, activity log, database upgrade 3 to 4):"
+  echo '```'
+  grep "growth selftest" out/ci-log.txt | head -10
+  echo '```'
   echo "Widgets known to Android for Elevate:"
   echo '```'
   head -c 2000 out/appwidget.txt
