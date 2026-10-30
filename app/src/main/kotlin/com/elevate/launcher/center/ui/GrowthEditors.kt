@@ -44,11 +44,11 @@ object HeightEditor {
             val r = host.hbox()
             r.addView(ftField, lp(0, WRAP, 1f))
             r.addView(inField, lp(0, WRAP, 1f).apply { leftMargin = host.dp(12) })
-            box.addView(r, lp(MATCH, WRAP))
+            box.addView(r, lp(MATCH, WRAP).apply { bottomMargin = host.dp(8) })
         } else {
             cmField = host.field("e.g. 172.5", if (existing != null) fmt1(existing.value) else "", number = true)
             box.fieldLabel("Height in centimetres (cm)")
-            box.addView(cmField, lp(MATCH, WRAP))
+            box.addView(cmField, lp(MATCH, WRAP).apply { bottomMargin = host.dp(8) })
         }
         var dateRow: LinearLayout? = null
         dateRow = box.pickRow("Date measured", Days.pretty(day)) {

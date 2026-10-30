@@ -1,0 +1,12 @@
+# Same format as activities.txt. Opened with the system font size set to 150% to check that text is not cut off.
+l-home .ui.home.HomeActivity
+l-home-drawer .ui.home.HomeActivity --ez ci_open_drawer true
+l-settings .ui.settings.SettingsActivity
+l-center .center.ui.CenterActivity
+l-center-growth .center.ui.CenterActivity --es section growth
+l-center-height-add .center.ui.CenterActivity --es section growth --ez ci_height_add true
+l-center-heightlist .center.ui.CenterActivity --es section heightlist --es ci_height_unit cm
+l-center-activity .center.ui.CenterActivity --es section activity
+l-center-growth-summary .center.ui.CenterActivity --es section growthsummary
+l-gaming .gaming.GamingActivity
+l-privacy .privacy.PrivacyActivity

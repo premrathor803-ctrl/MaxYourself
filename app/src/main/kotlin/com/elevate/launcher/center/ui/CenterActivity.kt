@@ -25,6 +25,7 @@ import com.elevate.launcher.center.data.PhotoRepo
 import com.elevate.launcher.core.BaseActivity
 import com.elevate.launcher.core.MATCH
 import com.elevate.launcher.core.Palette
+import com.elevate.launcher.core.Perf
 import com.elevate.launcher.core.UiKit
 import com.elevate.launcher.core.WRAP
 import com.elevate.launcher.core.dp
@@ -175,9 +176,13 @@ class CenterActivity : BaseActivity() {
     }
 
     // ------------------------------------------------------------ navigation
+    /** Set for a push or a pop, so the next [show] fades in. A refresh after an edit does not fade. */
+    private var fadeNext = false
+
     fun push(s: Screen) {
         stack.lastOrNull()?.onHide()
         stack.add(s)
+        fadeNext = true
         show()
     }
 
@@ -185,6 +190,7 @@ class CenterActivity : BaseActivity() {
         if (stack.size <= 1) { finish(); return }
         stack.last().onHide()
         stack.removeAt(stack.size - 1)
+        fadeNext = true
         show()
     }
 
@@ -240,6 +246,14 @@ class CenterActivity : BaseActivity() {
         } else {
             body.addView(content, FrameLayout.LayoutParams(MATCH, MATCH))
         }
+        body.animate().cancel()
+        if (fadeNext && Perf.animate) {
+            body.alpha = 0f
+            body.animate().alpha(1f).setDuration(Perf.duration(140L)).start()
+        } else {
+            body.alpha = 1f
+        }
+        fadeNext = false
         s.onShow()
     }
 

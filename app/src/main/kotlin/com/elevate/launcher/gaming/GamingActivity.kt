@@ -261,7 +261,7 @@ class GamingActivity : PageActivity() {
             setPadding(0, dp(6), 0, dp(6))
             contentDescription = "Open ${e.displayLabel}"
         }
-        val iv = ImageView(this)
+        val iv = ImageView(this).apply { importantForAccessibility = android.view.View.IMPORTANT_FOR_ACCESSIBILITY_NO }
         IconLoader.bindEntry(iv, this, e, dp(44))
         row.addView(iv, lp(dp(44), dp(44)))
 

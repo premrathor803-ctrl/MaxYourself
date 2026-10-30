@@ -123,7 +123,7 @@ class HiddenAppsActivity : BaseActivity() {
                 setPadding(dp(12), dp(8), dp(8), dp(8))
                 setOnClickListener { Launch.app(this@HiddenAppsActivity, e.pkg, e.cls, this) }
             }
-            val icon = ImageView(this)
+            val icon = ImageView(this).apply { importantForAccessibility = android.view.View.IMPORTANT_FOR_ACCESSIBILITY_NO }
             IconLoader.bindEntry(icon, this, e, dp(40))
             row.addView(icon, lp(dp(40), dp(40)))
             row.addView(UiKit.text(this, e.displayLabel, 15f, Palette.text, true), lp(0, WRAP, 1f).apply { leftMargin = dp(12) })

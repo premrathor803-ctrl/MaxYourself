@@ -65,9 +65,9 @@ fun resumeWorkout(host: CenterActivity) {
 fun LinearLayout.buttonRow(primary: Pair<String, () -> Unit>, secondary: Pair<String, () -> Unit>? = null) {
     val ctx = context
     val row = ctx.hbox()
-    row.addView(UiKit.button(ctx, primary.first, true, primary.second), lp(0, WRAP, 1f))
+    row.addView(UiKit.button(ctx, primary.first, true, onClick = primary.second), lp(0, WRAP, 1f))
     if (secondary != null) {
-        row.addView(UiKit.button(ctx, secondary.first, false, secondary.second), lp(0, WRAP, 1f).apply { leftMargin = ctx.dp(8) })
+        row.addView(UiKit.button(ctx, secondary.first, false, onClick = secondary.second), lp(0, WRAP, 1f).apply { leftMargin = ctx.dp(8) })
     }
     addView(row, lp(MATCH, WRAP).apply { topMargin = ctx.dp(8) })
 }

@@ -86,7 +86,7 @@ class PrivacyActivity : BaseActivity() {
     }
 
     private fun button(label: String, filled: Boolean = false, onClick: () -> Unit) {
-        col.addView(UiKit.button(this, label, filled, onClick), lp(MATCH, WRAP).apply { bottomMargin = dp(8) })
+        col.addView(UiKit.button(this, label, filled, onClick = onClick), lp(MATCH, WRAP).apply { bottomMargin = dp(8) })
     }
 
     private fun render() {

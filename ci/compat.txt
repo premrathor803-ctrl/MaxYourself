@@ -1,0 +1,14 @@
+# Screens opened on the older Android version. Same format as activities.txt.
+home .ui.home.HomeActivity
+home-drawer .ui.home.HomeActivity --ez ci_open_drawer true
+settings .ui.settings.SettingsActivity
+center .center.ui.CenterActivity --ez ci_seed true
+center-growth .center.ui.CenterActivity --es section growth
+center-height-add .center.ui.CenterActivity --es section growth --ez ci_height_add true
+center-heightlist .center.ui.CenterActivity --es section heightlist --es ci_height_unit cm
+center-activity .center.ui.CenterActivity --es section activity
+center-movement .center.ui.CenterActivity --es section movement
+center-growth-selftest .center.ui.CenterActivity --es section growth --ez ci_growth_selftest true
+gaming .gaming.GamingActivity
+gaming-seed .gaming.GamingActivity --ez ci_gaming_seed true
+privacy .privacy.PrivacyActivity

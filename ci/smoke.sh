@@ -242,6 +242,20 @@ done < ci/dark.txt
 timeout 45 adb shell cmd uimode night no < /dev/null >> out/starts.txt 2>&1
 sleep 2
 
+# Large text pass: system font size 150 percent, then put it back to normal
+timeout 45 adb shell settings put system font_scale 1.5 < /dev/null >> out/starts.txt 2>&1
+sleep 2
+while read -r name cls extras; do
+  [ -z "${name:-}" ] && continue
+  case "$name" in \#*) continue;; esac
+  echo "== $name ($cls)" >> out/starts.txt
+  timeout 45 adb shell am start -W -n "$PKG/$cls" --ez ci_skip_onboarding true $extras >> out/starts.txt 2>&1 < /dev/null
+  sleep 4
+  shot "$name"
+done < ci/large.txt
+timeout 45 adb shell settings put system font_scale 1.0 < /dev/null >> out/starts.txt 2>&1
+sleep 2
+
 # Random UI events inside our package
 adb shell monkey -p "$PKG" --throttle 150 -s 42 --pct-syskeys 0 -v 700 > out/monkey.txt 2>&1 || true
 sleep 2

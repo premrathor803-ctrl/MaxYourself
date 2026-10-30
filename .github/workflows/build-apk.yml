@@ -140,3 +140,54 @@ jobs:
             head -c 60000 out/report.md > out/report-trim.md
             gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/comments" -F body=@out/report-trim.md
           fi
+
+  compat:
+    needs: build
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    timeout-minutes: 40
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download APK
+        uses: actions/download-artifact@v4
+        with:
+          name: elevate-launcher-debug-apk
+          path: apk
+
+      - name: Download the previous release (build-24) for the before/after measurement
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p old
+          gh release download build-24 --pattern app-debug.apk --dir old || echo "build-24 not available"
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Run Android 7.0 (API 24) check and benchmark
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 24
+          target: default
+          arch: x86
+          profile: Nexus 5
+          disable-animations: true
+          script: bash ci/compat.sh
+
+      - name: Publish screenshots and report
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ls -la out || true
+          gh release view ci-shots > /dev/null 2>&1 || gh release create ci-shots --prerelease --title "CI screenshots" --notes "Rolling screenshots from the emulator smoke test"
+          if ls out/*.png > /dev/null 2>&1; then gh release upload ci-shots out/*.png --clobber; fi
+          if [ -f out/report.md ]; then
+            head -c 60000 out/report.md > out/report-trim.md
+            gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/comments" -F body=@out/report-trim.md
+          fi

@@ -69,12 +69,12 @@ fun LinearLayout.tapCard(title: String, sub: String = "", trailing: String = "â€
         background = UiKit.pressable(Palette.surface, ctx.dpf(16f))
         setPadding(ctx.dp(16), ctx.dp(12), ctx.dp(12), ctx.dp(12))
         minimumHeight = ctx.dp(56)
-        setOnClickListener { onClick() }
+        setOnClickListener { if (com.elevate.launcher.core.Tap.ok()) onClick() }
     }
     val col = ctx.vbox()
     col.addView(UiKit.text(ctx, title, 15f, Palette.text, true))
     if (sub.isNotEmpty()) col.addView(UiKit.text(ctx, sub, 12.5f, Palette.dim))
-    c.addView(col, lp(0, WRAP, 1f))
+    c.addView(col, lp(0, WRAP, 1f).apply { rightMargin = ctx.dp(10) })
     if (trailing.isNotEmpty()) c.addView(UiKit.text(ctx, trailing, 18f, Palette.dim, true))
     addView(c, gapLp(8))
     return c
@@ -89,7 +89,7 @@ fun LinearLayout.tileRow(a: Triple<String, String, () -> Unit>, b: Triple<String
         c.background = UiKit.pressable(Palette.surface, ctx.dpf(16f))
         c.setPadding(ctx.dp(14), ctx.dp(12), ctx.dp(14), ctx.dp(12))
         c.minimumHeight = ctx.dp(72)
-        c.setOnClickListener { t.third() }
+        c.setOnClickListener { if (com.elevate.launcher.core.Tap.ok()) t.third() }
         c.addView(UiKit.text(ctx, t.first, 15f, Palette.text, true))
         c.addView(UiKit.text(ctx, t.second, 12f, Palette.dim))
         return c
@@ -101,7 +101,7 @@ fun LinearLayout.tileRow(a: Triple<String, String, () -> Unit>, b: Triple<String
 }
 
 fun LinearLayout.actionButton(label: String, filled: Boolean = true, onClick: () -> Unit): TextView {
-    val b = UiKit.button(context, label, filled, onClick)
+    val b = UiKit.button(context, label, filled, onClick = onClick)
     addView(b, gapLp(8))
     return b
 }
@@ -116,7 +116,7 @@ fun LinearLayout.emptyState(title: String, msg: String, actionLabel: String? = n
         m.gravity = Gravity.CENTER
         m.setLineSpacing(0f, 1.15f)
         addView(m, lp(MATCH, WRAP).apply { bottomMargin = context.dp(if (actionLabel != null) 12 else 0) })
-        if (actionLabel != null && action != null) addView(UiKit.button(context, actionLabel, true, action))
+        if (actionLabel != null && action != null) addView(UiKit.button(context, actionLabel, true, onClick = action))
     }
 }
 
@@ -147,7 +147,7 @@ fun LinearLayout.pickRow(label: String, value: String, onClick: () -> Unit): Lin
     r.background = UiKit.pressable(Palette.surface2, ctx.dpf(12f))
     r.setPadding(ctx.dp(14), ctx.dp(12), ctx.dp(14), ctx.dp(12))
     r.minimumHeight = ctx.dp(48)
-    r.setOnClickListener { onClick() }
+    r.setOnClickListener { if (com.elevate.launcher.core.Tap.ok()) onClick() }
     r.addView(UiKit.text(ctx, label, 14f, Palette.dim), lp(0, WRAP, 1f))
     r.addView(UiKit.text(ctx, "$value  â€º", 14f, Palette.text, true))
     addView(r, gapLp(8))

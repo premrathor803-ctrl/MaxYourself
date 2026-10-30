@@ -47,6 +47,7 @@ class HomeItemView(
         isClickable = true
         isFocusable = true
         icon.scaleType = ImageView.ScaleType.FIT_CENTER
+        icon.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
         addView(icon, LayoutParams(ctx.dp(48), ctx.dp(48)))
         label.apply {
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
@@ -82,10 +83,11 @@ class HomeItemView(
 
     fun bindData() {
         label.text = item.label
+        contentDescription = item.label
         val missing = item.isApp && AppCatalog.loaded && AppCatalog.get(item.key) == null
         alpha = if (missing) 0.55f else 1f
         val meta = com.elevate.launcher.data.AppMeta.get(item.key)
-        if (item.isApp && meta != null && meta.label.isNotBlank()) label.text = meta.label
+        if (item.isApp && meta != null && meta.label.isNotBlank()) { label.text = meta.label; contentDescription = meta.label }
         rebindIcon()
     }
 }

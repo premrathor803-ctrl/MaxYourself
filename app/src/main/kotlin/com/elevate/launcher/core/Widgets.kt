@@ -24,9 +24,9 @@ object Widgets {
         }
         fun apply() { value.text = fmt(v); onChange(v) }
         row.addView(UiKit.text(ctx, label, 15f, Palette.text), lp(0, WRAP, 1f))
-        row.addView(UiKit.button(ctx, "−", false) { if (v - step >= min) { v -= step; apply() } }, lp(ctx.dp(46), ctx.dp(44)))
+        row.addView(UiKit.button(ctx, "−", false, repeatable = true) { if (v - step >= min) { v -= step; apply() } }, lp(ctx.dp(46), ctx.dp(44)))
         row.addView(value, lp(WRAP, WRAP))
-        row.addView(UiKit.button(ctx, "+", false) { if (v + step <= max) { v += step; apply() } }, lp(ctx.dp(46), ctx.dp(44)))
+        row.addView(UiKit.button(ctx, "+", false, repeatable = true) { if (v + step <= max) { v += step; apply() } }, lp(ctx.dp(46), ctx.dp(44)))
         return row
     }
 }

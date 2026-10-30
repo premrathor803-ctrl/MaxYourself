@@ -302,11 +302,11 @@ class GrowthScreen(host: CenterActivity) : Screen(host) {
                 val note = all.firstOrNull { it.id == p.id }?.note ?: ""
                 sel.para("Selected: " + HeightUnits.format(p.cm, inch) + "  ·  " + Days.pretty(p.day) + " " + p.day.take(4) + (if (note.isNotEmpty()) "  ·  " + note else ""), dim = false, sp = 14f, bottom = 6)
                 val row = host.hbox()
-                val earlier = UiKit.button(host, "‹ Earlier", false) { chart.select(chart.selected - 1) }
+                val earlier = UiKit.button(host, "‹ Earlier", false, repeatable = true) { chart.select(chart.selected - 1) }
                 val edit = UiKit.button(host, "Edit", false) {
                     all.firstOrNull { it.id == p.id }?.let { m -> HeightEditor.open(host, m, all) { host.refresh() } }
                 }
-                val later = UiKit.button(host, "Later ›", false) { chart.select(chart.selected + 1) }
+                val later = UiKit.button(host, "Later ›", false, repeatable = true) { chart.select(chart.selected + 1) }
                 earlier.contentDescription = "Previous, earlier reading"
                 later.contentDescription = "Next, later reading"
                 earlier.alpha = if (i == 0) 0.4f else 1f
@@ -621,7 +621,7 @@ class GrowthSummaryScreen(host: CenterActivity) : Screen(host) {
             val lines = ArrayList<String>()
             lines.add(pluralize(d.inPeriod, "height reading") + " recorded (" + d.heights.size + " in total)" + (if (d.heights.isNotEmpty()) ", latest on " + fullDate(d.heights.last().day) else ""))
             lines.add(pluralize(d.ticks, "habit check-in") + " ticked")
-            lines.add("Movement logged on " + pluralize(d.moveDays, "day") + (if (d.moveItems > 0) ", " + pluralize(d.moveItems, "library activity") + " marked done" else ""))
+            lines.add("Movement logged on " + pluralize(d.moveDays, "day") + (if (d.moveItems > 0) ", " + pluralize(d.moveItems, "library activity", "library activities") + " marked done" else ""))
             lines.add(d.activeMin.toString() + " active minutes logged")
             lines.add(if (d.sleepAvg != null) "Sleep: average " + String.format(java.util.Locale.US, "%.1f", d.sleepAvg) + " h over " + pluralize(d.sleepNights, "logged night") else "Sleep: no nights logged")
             for (l in lines) para("• $l", dim = false, sp = 13.5f, bottom = 4)

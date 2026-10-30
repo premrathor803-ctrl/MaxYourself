@@ -12,7 +12,14 @@ import com.elevate.launcher.data.AppMeta
 
 /** Starting apps and system screens, with friendly handling when an app has gone away. */
 object Launch {
+    private var lastKey = ""
+    private var lastAt = 0L
+
     fun app(ctx: Context, pkg: String, cls: String, from: View? = null): Boolean {
+        val now = android.os.SystemClock.elapsedRealtime()
+        if (lastKey == "$pkg/$cls" && now - lastAt < 800L) return true   // a double tap is one launch
+        lastKey = "$pkg/$cls"
+        lastAt = now
         val i = Intent(Intent.ACTION_MAIN)
             .addCategory(Intent.CATEGORY_LAUNCHER)
             .setComponent(ComponentName(pkg, cls))

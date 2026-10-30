@@ -332,7 +332,7 @@ class DrawerView(ctx: Context, private val host: DrawerHost) : FrameLayout(ctx) 
                         layoutParams = RecyclerView.LayoutParams(MATCH, c.dp(58))
                         background = UiKit.pressable(0, 0f)
                     }
-                    val iv = ImageView(c)
+                    val iv = ImageView(c).apply { importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO }
                     row.addView(iv, lp(c.dp(44), c.dp(44)))
                     val tv = UiKit.text(c, "", 16f, Palette.text).apply { maxLines = 1; ellipsize = android.text.TextUtils.TruncateAt.END }
                     row.addView(tv, lp(MATCH, WRAP).apply { leftMargin = c.dp(16) })
@@ -346,7 +346,7 @@ class DrawerView(ctx: Context, private val host: DrawerHost) : FrameLayout(ctx) 
                         layoutParams = RecyclerView.LayoutParams(MATCH, WRAP)
                         background = UiKit.pressable(0, 0f)
                     }
-                    val iv = ImageView(c)
+                    val iv = ImageView(c).apply { importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO }
                     cell.addView(iv, lp(c.dp(52), c.dp(52)))
                     val tv = UiKit.text(c, "", 12f, Palette.text).apply {
                         maxLines = 1; ellipsize = android.text.TextUtils.TruncateAt.END; gravity = Gravity.CENTER

@@ -23,6 +23,18 @@ const val WRAP = ViewGroup.LayoutParams.WRAP_CONTENT
 
 fun lp(w: Int, h: Int, weight: Float = 0f) = LinearLayout.LayoutParams(w, h, weight)
 
+/** Ignores a second tap that arrives right after the first, so a double tap cannot open a screen or save a record twice. */
+object Tap {
+    private var last = 0L
+
+    fun ok(): Boolean {
+        val now = android.os.SystemClock.elapsedRealtime()
+        if (now - last < 450L) return false
+        last = now
+        return true
+    }
+}
+
 object UiKit {
     fun rounded(color: Int, radiusPx: Float, strokeColor: Int = 0, strokePx: Int = 0): GradientDrawable =
         GradientDrawable().apply {
@@ -47,15 +59,15 @@ object UiKit {
             typeface = Fonts.face(bold)
         }
 
-    /** A filled pill button. */
-    fun button(ctx: Context, label: String, filled: Boolean = true, onClick: () -> Unit): TextView =
+    /** A filled pill button. Quick repeat taps are ignored unless [repeatable] is set (steppers and previous/next buttons). */
+    fun button(ctx: Context, label: String, filled: Boolean = true, repeatable: Boolean = false, onClick: () -> Unit): TextView =
         text(ctx, label, 14f, if (filled) Palette.onAccent else Palette.text, true).apply {
             gravity = Gravity.CENTER
             val bgc = if (filled) Palette.accent else Palette.surface2
             background = pressable(bgc, ctx.dpf(22f))
             setPadding(ctx.dp(18), ctx.dp(10), ctx.dp(18), ctx.dp(10))
             minHeight = ctx.dp(44)
-            setOnClickListener { onClick() }
+            setOnClickListener { if (repeatable || Tap.ok()) onClick() }
         }
 
     fun card(ctx: Context): LinearLayout = LinearLayout(ctx).apply {
