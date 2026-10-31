@@ -1,8 +1,8 @@
-# Elevate Launcher (V2)
+# Elevate Launcher (V2, with the V3 height and gaming work)
 
 An Android home-screen launcher with a built-in **Center**: offline habits, a home-workout
-library with a guided player, grooming and skincare education, posture and mobility, optional
-height and sleep trackers, goals and progress charts. Built to stay light on low-end phones
+library with a guided player, grooming and skincare education, posture and mobility, an optional
+height and growth tracker, sleep and activity logs, goals and progress charts, and a Gaming mode with an honest play-time log. Built to stay light on low-end phones
 (Android 7.0 / API 24 and up). No account, no ads, no network permission.
 
 ## Install
@@ -39,7 +39,12 @@ Uninstall V1 once, then install V2. Later builds update normally.
 - Private photo journal (see below)
 - Workout history and session details
 - 25 grooming, skincare, posture and learning articles plus a glossary
-- Optional height tracker and sleep tracker (off until you turn them on)
+- **Height and growth** (off until you turn it on): readings in cm or feet and inches (stored in cm), with checks for typing
+  slips, edit, delete and duplicate detection; a chart with 1 month to all-time ranges, touch or Earlier/Later buttons to pick a
+  reading, and a text summary for screen readers; a "compare two readings" summary that says when a difference is within
+  ordinary measuring error; a posture and mobility library where you mark activities done; a manual activity log; sleep log;
+  habit check-ins; six growth articles plus a measuring guide, written with teens in mind (how growth works, genes and puberty timing, sleep, food and movement, posture versus bone growth, claims to be careful about, when to talk to a doctor).
+  Everything shown comes from what you entered. Nothing is predicted, scored or promised
 - Goals and a progress screen with charts that show plain empty states when there is no data
 
 **Privacy (hidden apps)**
@@ -60,9 +65,17 @@ Uninstall V1 once, then install V2. Later builds update normally.
   your camera app to take the picture
 
 **Gaming mode**
-- Pauses Elevate's reminders, groups your games, optional Do Not Disturb (priority only), optional break reminders,
-  a Quick Settings tile
-- It does **not** make games faster, free memory or change graphics
+- Your own list of games (you choose which apps count as games), favourites, search, sort (A-Z, recent, most played)
+- One-tap launch from Elevate. If a game was uninstalled you get a message, not a crash
+- **Play-time log, only what Elevate can really see.** A session starts when you open a game from Elevate and ends when you come
+  back to Elevate, so the end time is approximate and is labelled that way. Games opened from somewhere else are not seen.
+  Sessions under a minute or over 8 hours are not saved. You can add a session by hand, and it is labelled as manual
+- Daily and weekly totals, a 7-day chart with a text version, delete one session or all of them
+- Per-game profile: record sessions or not, an optional "time for a break" reminder (a single alarm, no background service),
+  optional Do Not Disturb while that game is open. Do Not Disturb is explained before Android's permission screen opens and
+  is given back when you leave
+- Pauses Elevate's own reminders while Gaming mode is on, optional break nudges, a Quick Settings tile
+- It does **not** make games faster, free memory, show FPS or change graphics, and it never closes other apps
 
 **Backup and restore**
 - One JSON file with your home layout, settings, and (if you tick them) Center records and the hidden-apps list
@@ -84,8 +97,15 @@ Uninstall V1 once, then install V2. Later builds update normally.
 - **No height-increase claims.** Posture work can change how tall you stand and look. Nothing here claims to
   add bone length after growth plates close.
 - The content is general education, not medical advice.
-- Tested on an Android 10 emulator and by automated screenshots. It has not been measured on real low-end
-  hardware, so no speed or battery numbers are claimed.
+- Tested on Android 10 and Android 7.0 emulators and by automated screenshots, plus 23 JVM unit tests of the calculation
+  code (unit conversion, growth maths, session maths, movement library). It has not been measured on real low-end hardware.
+  The only numbers are emulator timings of one build against the one before it (cold start, memory, APK size), posted by CI
+  with each build. They show there was no slowdown on the emulator, not how it feels on a real phone.
+- **Not exercised in an emulator:** the Do Not Disturb permission flow, the session reminder notification, typing into the
+  height form (its save, edit, duplicate and delete logic is checked by an in-app self-test instead), and the fade between
+  Center screens (the test emulator turns animations off).
+- Some older Center screens (habits, workouts, goals) still read their data on the main thread. The new height, activity
+  and gaming screens load in the background. These are small local databases, but this is not yet uniform.
 - **Not tried on a real phone:** fingerprint unlock, the camera and gallery pickers, Do Not Disturb, the screen-lock
   gesture, and configuring third-party widgets. The emulator cannot do these, so they are written to Android's
   documented behaviour but not seen working.
@@ -104,7 +124,9 @@ Focus Mode, and multiple profiles. Photo "analysis" of faces or bodies is left o
 ## Building
 
 The APK is built by GitHub Actions on every push to `main` (`.github/workflows/build-apk.yml`):
-build, prerelease with the APK, then an emulator smoke test that posts screenshots and a report.
+unit tests, build, prerelease with the APK, then an Android 10 emulator smoke test (screenshots, a large-text pass, dark mode,
+self-checks) and an Android 7.0 emulator check with a before/after timing against the previous build. Results are posted as a
+commit comment.
 Locally: open the folder in Android Studio, or run `gradle assembleDebug` with Gradle 8.7 and JDK 17.
 No Gradle wrapper is committed.
 
