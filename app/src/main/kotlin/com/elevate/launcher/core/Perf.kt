@@ -5,13 +5,9 @@ package com.elevate.launcher.core
  * (animations, icon cache); they do not change how fast the phone is.
  */
 object Perf {
-    val animate: Boolean get() = Prefs.perf != "minimal"
+    val animate: Boolean get() = Motion.on
 
-    fun duration(base: Long): Long = when (Prefs.perf) {
-        "minimal" -> 0L
-        "lightweight" -> base / 2
-        else -> base
-    }
+    fun duration(base: Long): Long = Motion.dur(base)
 
     /** Fraction of the app heap the icon cache may use, in 1/N. */
     fun cacheDivisor(): Int = when (Prefs.perf) {

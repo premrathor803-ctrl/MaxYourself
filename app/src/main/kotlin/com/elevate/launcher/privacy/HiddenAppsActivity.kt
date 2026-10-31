@@ -58,7 +58,7 @@ class HiddenAppsActivity : BaseActivity() {
         }
         bar.addView(back, lp(dp(48), dp(48)))
         bar.addView(UiKit.text(this, "Hidden apps", 20f, Palette.text, true), lp(0, WRAP, 1f))
-        bar.addView(UiKit.text(this, "Lock", 14f, Palette.accent, true).apply {
+        bar.addView(UiKit.text(this, "Lock", 14f, Palette.accentText, true).apply {
             setPadding(dp(12), dp(10), dp(12), dp(10))
             setOnClickListener { Auth.lock(); finish() }
         })

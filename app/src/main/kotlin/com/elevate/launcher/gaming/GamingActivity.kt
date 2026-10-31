@@ -131,7 +131,7 @@ class GamingActivity : PageActivity() {
 
         // ---- status
         val status = UiKit.card(this)
-        status.addView(UiKit.text(this, if (on) "Gaming mode is ON" else "Gaming mode is off", 20f, if (on) Palette.accent else Palette.text, true))
+        status.addView(UiKit.text(this, if (on) "Gaming mode is ON" else "Gaming mode is off", 20f, if (on) Palette.accentText else Palette.text, true))
         val sub = if (on) {
             val t = Gaming.startedAt
             val mins = ((System.currentTimeMillis() - t) / 60000L).coerceAtLeast(0)
@@ -279,7 +279,7 @@ class GamingActivity : PageActivity() {
         if (bits.isNotEmpty()) info.addView(UiKit.text(this, bits.joinToString("  ·  "), 11.5f, Palette.dim))
         row.addView(info, lp(0, WRAP, 1f).apply { leftMargin = dp(12) })
 
-        val star = UiKit.text(this, if (p.favorite) "★" else "☆", 22f, if (p.favorite) Palette.accent else Palette.dim).apply {
+        val star = UiKit.text(this, if (p.favorite) "★" else "☆", 22f, if (p.favorite) Palette.accentText else Palette.dim).apply {
             gravity = Gravity.CENTER
             contentDescription = if (p.favorite) "Remove ${e.displayLabel} from favourites" else "Add ${e.displayLabel} to favourites"
             setOnClickListener {
@@ -469,7 +469,7 @@ class GamingActivity : PageActivity() {
         }
         info.addView(UiKit.text(this, badge, 11.5f, Palette.dim))
         row.addView(info, lp(0, WRAP, 1f))
-        val del = UiKit.text(this, "Delete", 13f, Palette.accent, true).apply {
+        val del = UiKit.text(this, "Delete", 13f, Palette.accentText, true).apply {
             gravity = Gravity.CENTER
             minimumHeight = dp(44)
             setPadding(dp(12), 0, dp(4), 0)

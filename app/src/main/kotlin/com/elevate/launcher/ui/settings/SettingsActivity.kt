@@ -20,6 +20,8 @@ import com.elevate.launcher.ElevateApp
 import com.elevate.launcher.core.BaseActivity
 import com.elevate.launcher.core.DefaultHome
 import com.elevate.launcher.core.Dialogs
+import com.elevate.launcher.core.Ds
+import com.elevate.launcher.core.Motion
 import com.elevate.launcher.core.Fonts
 import com.elevate.launcher.data.Io
 import com.elevate.launcher.core.dpf
@@ -165,9 +167,14 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
 
         // ---------------------------------------------------------------- appearance
         val look = cat("Appearance")
-        list(look, "theme", "Theme", "system", listOf("system" to "System default", "dark" to "Dark", "light" to "Light"))
+        action(look, "Customization centre", "Themes, accent colours, card styles, dashboard layout, navigation style and animation, with a live preview.") {
+            startActivity(android.content.Intent(requireContext(), com.elevate.launcher.center.ui.CenterActivity::class.java).putExtra("section", "customize"))
+        }
+        list(look, "theme", "Theme", "dark", listOf("dark" to "Dark", "system" to "System default", "light" to "Light"))
         switch(look, "amoled", "Pure black dark mode", "Black background in dark mode. Saves battery on OLED screens.", false)
-        list(look, "accent", "Accent colour", "teal", Palette.accents.keys.map { it to it.replaceFirstChar { c -> c.uppercase() } })
+        list(look, "accent", "Accent colour", "electric", Palette.accentNames.map { it.key to it.value })
+        list(look, "card_style", "Card style", "soft", Ds.cardStyles.map { it.key to it.value })
+        list(look, "motion", "Animation", "full", listOf("full" to "Full", "reduced" to "Reduced", "off" to "Off (reduced motion)"))
         list(look, "icon_shape", "Icon shape", "squircle", listOf(
             "system" to "Keep each app's own shape", "circle" to "Circle", "squircle" to "Squircle",
             "rounded" to "Rounded square", "square" to "Square"
@@ -431,8 +438,10 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
     override fun onSharedPreferenceChanged(sp: SharedPreferences, key: String?) {
         when (key) {
             "theme" -> ElevateApp.applyNightMode()
-            "accent", "amoled" -> activity?.recreate()
-            "icon_shape", "perf", "icon_pack", "icon_scale" -> IconLoader.clear()
+            "accent", "amoled", "card_style" -> activity?.recreate()
+            "icon_shape", "icon_pack", "icon_scale" -> IconLoader.clear()
+            "perf" -> { IconLoader.clear(); Motion.refresh() }
+            "motion" -> Motion.refresh()
         }
     }
 }

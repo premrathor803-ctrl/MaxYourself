@@ -59,22 +59,53 @@ object UiKit {
             typeface = Fonts.face(bold)
         }
 
-    /** A filled pill button. Quick repeat taps are ignored unless [repeatable] is set (steppers and previous/next buttons). */
+    /** Light-weight, tabular figures for large numbers. */
+    fun display(ctx: Context, s: CharSequence, sp: Float, color: Int): TextView =
+        TextView(ctx).apply {
+            text = s
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, sp)
+            setTextColor(color)
+            typeface = Fonts.display()
+            letterSpacing = -0.02f
+            fontFeatureSettings = "tnum"
+            includeFontPadding = false
+        }
+
+    /**
+     * A pill button. The primary one is an accent gradient, the quiet one a raised surface. Quick repeat taps are ignored
+     * unless [repeatable] is set (steppers and previous/next buttons). It sinks slightly while pressed.
+     */
     fun button(ctx: Context, label: String, filled: Boolean = true, repeatable: Boolean = false, onClick: () -> Unit): TextView =
         text(ctx, label, 14f, if (filled) Palette.onAccent else Palette.text, true).apply {
             gravity = Gravity.CENTER
-            val bgc = if (filled) Palette.accent else Palette.surface2
-            background = pressable(bgc, ctx.dpf(22f))
-            setPadding(ctx.dp(18), ctx.dp(10), ctx.dp(18), ctx.dp(10))
-            minHeight = ctx.dp(44)
+            val live = Palette.live()
+            background = if (filled) Ds.primaryBg(ctx, live) else Ds.secondaryBg(ctx, live)
+            setPadding(ctx.dp(20), ctx.dp(10), ctx.dp(20), ctx.dp(10))
+            minHeight = ctx.dp(46)
+            letterSpacing = 0.01f
+            isClickable = true
+            Motion.press(this)
             setOnClickListener { if (repeatable || Tap.ok()) onClick() }
         }
 
-    fun card(ctx: Context): LinearLayout = LinearLayout(ctx).apply {
+    /** A card in the style chosen in the customization centre. */
+    fun card(ctx: Context): LinearLayout = styledCard(ctx, Palette.live(), Prefs.cardStyle)
+
+    fun styledCard(ctx: Context, s: Palette.Scheme, style: String): LinearLayout = LinearLayout(ctx).apply {
         orientation = LinearLayout.VERTICAL
-        background = rounded(Palette.surface, ctx.dpf(18f))
-        setPadding(ctx.dp(16), ctx.dp(14), ctx.dp(16), ctx.dp(14))
+        background = Ds.cardBg(ctx, style, s)
+        elevation = Ds.cardElevation(ctx, style, s)
+        setPadding(ctx.dp(18), ctx.dp(16), ctx.dp(18), ctx.dp(16))
     }
+
+    /** A small rounded label, for status ("ON"), level and tags. */
+    fun pill(ctx: Context, label: String, fill: Int, textColor: Int, sp: Float = 11.5f): TextView =
+        text(ctx, label, sp, textColor, true).apply {
+            gravity = Gravity.CENTER
+            letterSpacing = 0.04f
+            background = rounded(fill, ctx.dpf(20f))
+            setPadding(ctx.dp(10), ctx.dp(4), ctx.dp(10), ctx.dp(4))
+        }
 
     fun spacer(ctx: Context, h: Int): View = View(ctx).apply { layoutParams = lp(MATCH, ctx.dp(h)) }
 }

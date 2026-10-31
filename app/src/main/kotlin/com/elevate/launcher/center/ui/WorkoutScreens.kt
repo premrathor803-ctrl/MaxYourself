@@ -391,7 +391,7 @@ class SessionDetailScreen(host: CenterActivity, private val id: Long) : Screen(h
                 }
                 val row = context.hbox()
                 row.addView(UiKit.text(context, e.name, 14f, Palette.text), lp(0, WRAP, 1f))
-                row.addView(UiKit.text(context, label, 13f, if (e.state == "done") Palette.accent else Palette.dim, true))
+                row.addView(UiKit.text(context, label, 13f, if (e.state == "done") Palette.accentText else Palette.dim, true))
                 addView(row, lp(MATCH, WRAP).apply { bottomMargin = context.dp(6) })
             }
         }

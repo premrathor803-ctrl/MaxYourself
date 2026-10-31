@@ -118,7 +118,7 @@ class CenterActivity : BaseActivity() {
             setOnClickListener { back() }
         }
         titleView = UiKit.text(this, "Center", 20f, Palette.text, true).apply { isSingleLine = true }
-        actionView = UiKit.text(this, "", 14f, Palette.accent, true).apply {
+        actionView = UiKit.text(this, "", 14f, Palette.accentText, true).apply {
             setPadding(dp(12), dp(10), dp(12), dp(10))
             setOnClickListener { stack.lastOrNull()?.onAction() }
             visibility = View.GONE
@@ -186,6 +186,9 @@ class CenterActivity : BaseActivity() {
         show()
     }
 
+    /** Whether [s] is the screen showing right now. */
+    fun isTop(s: Screen): Boolean = stack.lastOrNull() === s
+
     fun pop() {
         if (stack.size <= 1) { finish(); return }
         stack.last().onHide()
@@ -206,6 +209,15 @@ class CenterActivity : BaseActivity() {
         stack.lastOrNull()?.onHide()
         show()
         scroll?.post { scroll?.scrollTo(0, y) }
+    }
+
+    /**
+     * Starts this screen again so every colour and style is read afresh, and comes back to [section]. The intent object
+     * is kept by Android across the restart, so putting the section in it is enough.
+     */
+    fun restartAt(section: String) {
+        intent.putExtra(EXTRA_SECTION, section)
+        recreate()
     }
 
     /** Re-reads the top screen's action label (used by screens whose action changes while they are open). */
@@ -318,6 +330,7 @@ class CenterActivity : BaseActivity() {
             section == "glossary" -> GlossaryScreen(this)
             section == "care" -> CareLogScreen(this)
             section == "reminders" -> RemindersScreen(this)
+            section == "customize" -> CustomizeScreen(this)
             section == "photos" -> PhotoJournalScreen(this)
             section == "photo:first" -> PhotoRepo.all().firstOrNull()?.let { PhotoDetailScreen(this, it.id) }
             section.startsWith("photo:") -> section.removePrefix("photo:").toLongOrNull()?.let { PhotoDetailScreen(this, it) }

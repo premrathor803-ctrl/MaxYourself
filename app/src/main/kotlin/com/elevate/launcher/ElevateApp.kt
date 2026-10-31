@@ -24,6 +24,7 @@ class ElevateApp : Application() {
         super.onCreate()
         Prefs.init(this)
         com.elevate.launcher.core.Fonts.init(this)
+        com.elevate.launcher.core.Motion.init(this)
         applyNightMode()
         Store.init(this)
         Center.init(this)

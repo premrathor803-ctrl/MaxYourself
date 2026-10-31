@@ -18,6 +18,8 @@ object Fonts {
     private var cacheKey = ""
     private var regular: Typeface = Typeface.DEFAULT
     private var bold: Typeface = Typeface.DEFAULT_BOLD
+    private var light: Typeface = Typeface.DEFAULT
+    private var strongFace: Typeface = Typeface.DEFAULT_BOLD
 
     fun init(ctx: Context) { app = ctx.applicationContext }
 
@@ -37,16 +39,38 @@ object Fonts {
         return if (isBold) bold else regular
     }
 
+    /** A light weight for large numbers. With a chosen font family it is simply the regular weight of that family. */
+    @Synchronized
+    fun display(): Typeface {
+        val key = signature()
+        if (key != cacheKey) rebuild(key)
+        return light
+    }
+
+    /** A true bold, for the few places where medium is not strong enough. */
+    @Synchronized
+    fun strong(): Typeface {
+        val key = signature()
+        if (key != cacheKey) rebuild(key)
+        return strongFace
+    }
+
     private fun rebuild(key: String) {
         cacheKey = key
-        var r: Typeface = Typeface.DEFAULT
-        var b: Typeface = Typeface.DEFAULT_BOLD
+        // The built-in look uses Android's medium weight where other screens would use bold, and the light weight for
+        // large figures. A font the person chose keeps its own regular and bold.
+        var r: Typeface = Typeface.create("sans-serif", Typeface.NORMAL)
+        var b: Typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+        var l: Typeface = Typeface.create("sans-serif-light", Typeface.NORMAL)
+        var st: Typeface = Typeface.create("sans-serif", Typeface.BOLD)
         when (mode) {
-            "serif" -> { r = Typeface.SERIF; b = Typeface.create(Typeface.SERIF, Typeface.BOLD) }
-            "mono" -> { r = Typeface.MONOSPACE; b = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD) }
+            "serif" -> { r = Typeface.SERIF; b = Typeface.create(Typeface.SERIF, Typeface.BOLD); l = r; st = b }
+            "mono" -> { r = Typeface.MONOSPACE; b = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD); l = r; st = b }
             "condensed" -> {
                 r = Typeface.create("sans-serif-condensed", Typeface.NORMAL)
                 b = Typeface.create("sans-serif-condensed", Typeface.BOLD)
+                l = r
+                st = b
             }
             "custom" -> try {
                 val f = customFile()
@@ -54,6 +78,8 @@ object Fonts {
                     val t = Typeface.createFromFile(f)
                     r = t
                     b = Typeface.create(t, Typeface.BOLD)
+                    l = t
+                    st = b
                 }
             } catch (e: Throwable) {
                 // an unreadable file just means the normal font is used
@@ -61,6 +87,8 @@ object Fonts {
         }
         regular = r
         bold = b
+        light = l
+        strongFace = st
     }
 
     /**

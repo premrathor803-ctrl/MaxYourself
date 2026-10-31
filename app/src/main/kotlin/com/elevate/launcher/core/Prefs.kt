@@ -27,11 +27,22 @@ object Prefs {
     fun getInt(k: String, d: Int): Int = try { sp.getInt(k, d) } catch (e: ClassCastException) { d }
 
     // ---- appearance
-    val theme get() = s("theme", "system")            // system | dark | light
+    val theme get() = s("theme", "dark")              // dark | system | light (dark is the default look)
     val amoled get() = b("amoled", false)
-    val accent get() = s("accent", "teal")
+    val accent get() = s("accent", "electric")
     val wallpaper get() = b("wallpaper", true)
     val perf get() = s("perf", "balanced")            // balanced | lightweight | minimal
+    val cardStyle get() = s("card_style", "soft")     // soft | flat | outline | accent
+    val motion get() = s("motion", "full")            // full | reduced | off (the performance profile can lower it further)
+    val navStyle get() = s("nav_style", "pill")       // pill | dots | bar (page indicator on the home screen)
+    val dashLayout get() = s("dash_layout", "balanced") // balanced | focus | explorer
+    /** Dashboard card order and hidden cards, kept as comma separated ids. Empty means "use the layout's own". */
+    val dashOrder get() = s("dash_order", "")
+    val dashHidden get() = s("dash_hidden", "")
+    /** First name used in the greeting. Optional, never leaves the phone. */
+    var userName: String
+        get() = s("user_name", "")
+        set(v) = putString("user_name", v.trim().take(24))
     val iconShape get() = s("icon_shape", "squircle") // system | circle | squircle | rounded | square
     val font get() = s("font", "system")              // system | serif | mono | condensed | custom
 

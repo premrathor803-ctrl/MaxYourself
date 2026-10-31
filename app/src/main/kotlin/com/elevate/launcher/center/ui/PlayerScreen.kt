@@ -392,7 +392,7 @@ class PlayerScreen(host: CenterActivity, private val plan: Plan, resume: ResumeS
 
         if (e.timed && Center.useTimers) {
             if (e.perSide) {
-                val sideLine = UiKit.text(host, if (side == 1) "First side" else "Switch sides: second side", 16f, Palette.accent, true)
+                val sideLine = UiKit.text(host, if (side == 1) "First side" else "Switch sides: second side", 16f, Palette.accentText, true)
                 sideLine.gravity = Gravity.CENTER
                 bodyBox.addView(sideLine, lp(MATCH, WRAP).apply { bottomMargin = host.dp(8) })
             }

@@ -46,7 +46,11 @@ class AsyncBox<T : Any>(
         val b = host.vbox()
         box = b
         val c = cached
-        if (c != null) draw(b, c) else b.para("Loading…", sp = 13f)
+        if (c != null) draw(b, c) else {
+            b.addView(com.elevate.launcher.core.Skeleton(host, 120), lp(MATCH, WRAP).apply { bottomMargin = host.dp(10) })
+            b.addView(com.elevate.launcher.core.Skeleton(host, 84), lp(MATCH, WRAP).apply { bottomMargin = host.dp(10) })
+            b.addView(com.elevate.launcher.core.Skeleton(host, 84), lp(MATCH, WRAP))
+        }
         fetch(b)
         return b
     }

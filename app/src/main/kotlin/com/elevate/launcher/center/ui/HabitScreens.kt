@@ -21,7 +21,7 @@ import com.elevate.launcher.core.dpf
 import com.elevate.launcher.core.lp
 import com.elevate.launcher.core.toast
 
-private fun stateKind(s: HState): Int = when (s) {
+fun stateKind(s: HState): Int = when (s) {
     HState.COMPLETED -> 1
     HState.SKIPPED -> 2
     HState.NOT_COMPLETED -> 3
@@ -29,7 +29,7 @@ private fun stateKind(s: HState): Int = when (s) {
     HState.PENDING -> 0
 }
 
-private fun stateWords(s: HState, day: String): String {
+fun stateWords(s: HState, day: String): String {
     val isToday = day == Days.today()
     return when (s) {
         HState.COMPLETED -> "Completed"

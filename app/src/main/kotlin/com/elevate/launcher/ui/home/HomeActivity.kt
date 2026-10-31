@@ -151,7 +151,7 @@ class HomeActivity : BaseActivity(), DrawerHost {
     }
 
     private fun prefsSignature(): String = listOf(
-        Prefs.theme, Prefs.amoled, Prefs.accent, Prefs.wallpaper, Prefs.perf, Prefs.iconShape, Prefs.cols, Prefs.rows,
+        Prefs.theme, Prefs.amoled, Prefs.accent, Prefs.cardStyle, Prefs.motion, Prefs.navStyle, Prefs.wallpaper, Prefs.perf, Prefs.iconShape, Prefs.cols, Prefs.rows,
         Prefs.dockCount, Prefs.iconScale, Prefs.spacing, Prefs.showLabels, Prefs.showClock, Prefs.showSearch,
         Prefs.drawerStyle, Prefs.drawerCols, Prefs.iconPack, Prefs.clockStyle, com.elevate.launcher.core.Fonts.signature(), Prefs.getInt("restore_stamp", 0)
     ).joinToString("|")

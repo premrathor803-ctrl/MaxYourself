@@ -320,7 +320,7 @@ class DrawerView(ctx: Context, private val host: DrawerHost) : FrameLayout(ctx) 
             val c = parent.context
             when (type) {
                 0 -> {
-                    val t = UiKit.text(c, "", 13f, Palette.accent, true).apply { setPadding(c.dp(20), c.dp(14), c.dp(20), c.dp(4)) }
+                    val t = UiKit.text(c, "", 13f, Palette.accentText, true).apply { setPadding(c.dp(20), c.dp(14), c.dp(20), c.dp(4)) }
                     t.layoutParams = RecyclerView.LayoutParams(MATCH, WRAP)
                     return VH(t, null, t)
                 }

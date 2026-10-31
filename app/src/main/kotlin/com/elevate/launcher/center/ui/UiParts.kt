@@ -9,7 +9,11 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
+import com.elevate.launcher.core.Ds
+import com.elevate.launcher.core.Ico
 import com.elevate.launcher.core.MATCH
+import com.elevate.launcher.core.Motion
+import com.elevate.launcher.core.Prefs
 import com.elevate.launcher.core.Palette
 import com.elevate.launcher.core.UiKit
 import com.elevate.launcher.core.WRAP
@@ -66,18 +70,43 @@ fun LinearLayout.tapCard(title: String, sub: String = "", trailing: String = "�
     val c = LinearLayout(ctx).apply {
         orientation = LinearLayout.HORIZONTAL
         gravity = Gravity.CENTER_VERTICAL
-        background = UiKit.pressable(Palette.surface, ctx.dpf(16f))
-        setPadding(ctx.dp(16), ctx.dp(12), ctx.dp(12), ctx.dp(12))
-        minimumHeight = ctx.dp(56)
+        background = Ds.pressableCard(ctx, Prefs.cardStyle, Palette.live(), 18f)
+        elevation = Ds.cardElevation(ctx, Prefs.cardStyle, Palette.live())
+        setPadding(ctx.dp(18), ctx.dp(13), ctx.dp(14), ctx.dp(13))
+        minimumHeight = ctx.dp(58)
+        isClickable = true
+        Motion.press(this)
         setOnClickListener { if (com.elevate.launcher.core.Tap.ok()) onClick() }
     }
     val col = ctx.vbox()
     col.addView(UiKit.text(ctx, title, 15f, Palette.text, true))
     if (sub.isNotEmpty()) col.addView(UiKit.text(ctx, sub, 12.5f, Palette.dim))
     c.addView(col, lp(0, WRAP, 1f).apply { rightMargin = ctx.dp(10) })
-    if (trailing.isNotEmpty()) c.addView(UiKit.text(ctx, trailing, 18f, Palette.dim, true))
+    if (trailing == "›") c.addView(Ico.view(ctx, "chevron", 18, Palette.dim))
+    else if (trailing.isNotEmpty()) c.addView(UiKit.text(ctx, trailing, 18f, Palette.dim, true))
     addView(c, gapLp(8))
     return c
+}
+
+/** The icon that goes with a section name, or null when there is none. */
+fun iconFor(title: String): String? {
+    val t = title.lowercase()
+    return when {
+        t.startsWith("habit") -> "habits"
+        t.startsWith("workout") -> "workouts"
+        t.startsWith("grooming") -> "grooming"
+        t.startsWith("posture") -> "posture"
+        t.startsWith("goal") -> "goals"
+        t.startsWith("progress") -> "progress"
+        t.startsWith("learn") -> "learn"
+        t.startsWith("reminder") -> "reminders"
+        t.startsWith("photo") -> "photos"
+        t.startsWith("height") || t.contains("measurement") -> "growth"
+        t.contains("sleep") -> "sleep"
+        t.contains("movement") -> "workouts"
+        t.startsWith("gaming") -> "gaming"
+        else -> null
+    }
 }
 
 /** Two tiles side by side, used for the dashboard shortcuts. */
@@ -86,10 +115,15 @@ fun LinearLayout.tileRow(a: Triple<String, String, () -> Unit>, b: Triple<String
     val row = ctx.hbox()
     fun tile(t: Triple<String, String, () -> Unit>): LinearLayout {
         val c = ctx.vbox()
-        c.background = UiKit.pressable(Palette.surface, ctx.dpf(16f))
-        c.setPadding(ctx.dp(14), ctx.dp(12), ctx.dp(14), ctx.dp(12))
-        c.minimumHeight = ctx.dp(72)
+        c.background = Ds.pressableCard(ctx, Prefs.cardStyle, Palette.live(), 18f)
+        c.elevation = Ds.cardElevation(ctx, Prefs.cardStyle, Palette.live())
+        c.setPadding(ctx.dp(16), ctx.dp(14), ctx.dp(14), ctx.dp(14))
+        c.minimumHeight = ctx.dp(76)
+        c.isClickable = true
+        Motion.press(c)
         c.setOnClickListener { if (com.elevate.launcher.core.Tap.ok()) t.third() }
+        val kind = iconFor(t.first)
+        if (kind != null) c.addView(Ico.badge(ctx, kind, 34), lp(ctx.dp(34), ctx.dp(34)).apply { bottomMargin = ctx.dp(10) })
         c.addView(UiKit.text(ctx, t.first, 15f, Palette.text, true))
         c.addView(UiKit.text(ctx, t.second, 12f, Palette.dim))
         return c
@@ -124,8 +158,8 @@ fun LinearLayout.emptyState(title: String, msg: String, actionLabel: String? = n
 fun LinearLayout.noteCard(text: String, bottom: Int = 10): TextView {
     val t = UiKit.text(context, text, 13f, Palette.dim)
     t.setLineSpacing(0f, 1.15f)
-    t.background = UiKit.rounded(Palette.surface2, context.dpf(14f))
-    t.setPadding(context.dp(14), context.dp(10), context.dp(14), context.dp(10))
+    t.background = UiKit.rounded(Palette.surface2, context.dpf(Ds.R_SMALL), Palette.border, Math.max(1, context.dp(1)))
+    t.setPadding(context.dp(16), context.dp(12), context.dp(16), context.dp(12))
     addView(t, gapLp(bottom))
     return t
 }
@@ -144,9 +178,11 @@ fun LinearLayout.fieldLabel(text: String) {
 fun LinearLayout.pickRow(label: String, value: String, onClick: () -> Unit): LinearLayout {
     val ctx = context
     val r = ctx.hbox()
-    r.background = UiKit.pressable(Palette.surface2, ctx.dpf(12f))
-    r.setPadding(ctx.dp(14), ctx.dp(12), ctx.dp(14), ctx.dp(12))
-    r.minimumHeight = ctx.dp(48)
+    r.background = Ds.secondaryBg(ctx, Palette.live(), Ds.R_SMALL)
+    r.setPadding(ctx.dp(16), ctx.dp(12), ctx.dp(16), ctx.dp(12))
+    r.minimumHeight = ctx.dp(50)
+    r.isClickable = true
+    Motion.press(r)
     r.setOnClickListener { if (com.elevate.launcher.core.Tap.ok()) onClick() }
     r.addView(UiKit.text(ctx, label, 14f, Palette.dim), lp(0, WRAP, 1f))
     r.addView(UiKit.text(ctx, "$value  ›", 14f, Palette.text, true))
@@ -161,8 +197,11 @@ fun Context.field(hint: String, initial: String = "", multiline: Boolean = false
         setTextColor(Palette.text)
         setHintTextColor(Palette.dim)
         textSize = 15f
-        background = UiKit.rounded(Palette.surface2, dpf(12f))
-        setPadding(dp(14), dp(12), dp(14), dp(12))
+        background = android.graphics.drawable.StateListDrawable().apply {
+            addState(intArrayOf(android.R.attr.state_focused), UiKit.rounded(Palette.surface2, dpf(Ds.R_SMALL), Palette.accent, dp(2)))
+            addState(intArrayOf(), UiKit.rounded(Palette.surface2, dpf(Ds.R_SMALL), Palette.border, Math.max(1, dp(1))))
+        }
+        setPadding(dp(16), dp(12), dp(16), dp(12))
         inputType = when {
             number -> InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
             multiline -> InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES or InputType.TYPE_TEXT_FLAG_MULTI_LINE
@@ -184,7 +223,8 @@ fun Context.chips(options: List<Pair<String, String>>, selected: String, onSelec
     fun paint() {
         for ((k, v) in views) {
             val on = k == cur
-            v.background = UiKit.rounded(if (on) Palette.accent else Palette.surface2, dpf(12f))
+            v.background = if (on) Ds.gradient(Palette.accent, Palette.accent2, dpf(Ds.R_SMALL))
+            else UiKit.rounded(Palette.surface2, dpf(Ds.R_SMALL), Palette.border, Math.max(1, dp(1)))
             v.setTextColor(if (on) Palette.onAccent else Palette.text)
         }
     }
@@ -209,7 +249,8 @@ fun Context.dayChips(mask: Int, onChange: (Int) -> Unit): LinearLayout {
     fun paint() {
         for (i in 0..6) {
             val on = (cur shr i) and 1 == 1
-            views[i].background = UiKit.rounded(if (on) Palette.accent else Palette.surface2, dpf(12f))
+            views[i].background = if (on) Ds.gradient(Palette.accent, Palette.accent2, dpf(Ds.R_SMALL))
+            else UiKit.rounded(Palette.surface2, dpf(Ds.R_SMALL), Palette.border, Math.max(1, dp(1)))
             views[i].setTextColor(if (on) Palette.onAccent else Palette.text)
         }
     }
@@ -260,7 +301,7 @@ fun LinearLayout.statRow(items: List<Pair<String, String>>, bottom: Int = 8) {
     for ((value, caption) in items) {
         val col = ctx.vbox()
         col.gravity = Gravity.CENTER_HORIZONTAL
-        val v = UiKit.text(ctx, value, 22f, Palette.text, true)
+        val v = UiKit.display(ctx, value, 26f, Palette.text)
         v.gravity = Gravity.CENTER
         val c = UiKit.text(ctx, caption, 11.5f, Palette.dim)
         c.gravity = Gravity.CENTER

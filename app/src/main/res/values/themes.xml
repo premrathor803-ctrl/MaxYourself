@@ -2,9 +2,11 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
 
     <style name="Theme.Elevate" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="colorPrimary">#19B5A5</item>
-        <item name="colorSecondary">#19B5A5</item>
-        <item name="colorAccent">#19B5A5</item>
+        <item name="colorPrimary">#648CFF</item>
+        <item name="colorSecondary">#648CFF</item>
+        <item name="colorAccent">#648CFF</item>
+        <item name="android:windowAnimationStyle">@style/Anim.Elevate</item>
+        <item name="alertDialogTheme">@style/Dialog.Elevate</item>
         <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
@@ -18,8 +20,24 @@
     </style>
 
     <!-- Accent overlays, applied at runtime with theme.applyStyle -->
+    <!-- Short, calm screen transitions. They follow the phone's "remove animations" setting on their own, and the Elevate
+         animation setting is applied in BaseActivity. -->
+    <style name="Anim.Elevate" parent="@android:style/Animation.Activity">
+        <item name="android:activityOpenEnterAnimation">@anim/ev_open_enter</item>
+        <item name="android:activityOpenExitAnimation">@anim/ev_open_exit</item>
+        <item name="android:activityCloseEnterAnimation">@anim/ev_close_enter</item>
+        <item name="android:activityCloseExitAnimation">@anim/ev_close_exit</item>
+    </style>
+
+    <!-- Dialogs: rounded raised surface that matches the app in light and dark. Buttons take the accent. -->
+    <style name="Dialog.Elevate" parent="Theme.MaterialComponents.DayNight.Dialog.Alert">
+        <item name="android:windowBackground">@drawable/ev_dialog_bg</item>
+        <item name="android:windowAnimationStyle">@android:style/Animation.Dialog</item>
+    </style>
+
+    <style name="Accent.Electric" parent=""><item name="colorPrimary">#648CFF</item><item name="colorSecondary">#648CFF</item><item name="colorAccent">#648CFF</item></style>
     <style name="Accent.Teal" parent=""><item name="colorPrimary">#19B5A5</item><item name="colorSecondary">#19B5A5</item><item name="colorAccent">#19B5A5</item></style>
-    <style name="Accent.Violet" parent=""><item name="colorPrimary">#8B6CFF</item><item name="colorSecondary">#8B6CFF</item><item name="colorAccent">#8B6CFF</item></style>
+    <style name="Accent.Violet" parent=""><item name="colorPrimary">#9272FF</item><item name="colorSecondary">#9272FF</item><item name="colorAccent">#9272FF</item></style>
     <style name="Accent.Orange" parent=""><item name="colorPrimary">#F2882E</item><item name="colorSecondary">#F2882E</item><item name="colorAccent">#F2882E</item></style>
     <style name="Accent.Rose" parent=""><item name="colorPrimary">#E5527A</item><item name="colorSecondary">#E5527A</item><item name="colorAccent">#E5527A</item></style>
     <style name="Accent.Blue" parent=""><item name="colorPrimary">#3B82F6</item><item name="colorSecondary">#3B82F6</item><item name="colorAccent">#3B82F6</item></style>

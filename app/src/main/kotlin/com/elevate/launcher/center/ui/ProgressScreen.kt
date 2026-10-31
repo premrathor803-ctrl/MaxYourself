@@ -49,7 +49,7 @@ class ProgressScreen(host: CenterActivity) : Screen(host) {
                     for ((c, n) in cats) {
                         val row = host.hbox()
                         row.addView(UiKit.text(host, c, 14f, Palette.text), lp(0, WRAP, 1f))
-                        row.addView(UiKit.text(host, n.toString(), 14f, Palette.accent, true))
+                        row.addView(UiKit.text(host, n.toString(), 14f, Palette.accentText, true))
                         addView(row, lp(MATCH, WRAP).apply { bottomMargin = host.dp(4) })
                     }
                     para("Recorded: number of completed workouts of each type.", sp = 12f, bottom = 0)
