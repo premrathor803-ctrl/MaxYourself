@@ -24,8 +24,6 @@ class Ico(private val kind: String, private var tint: Int) : Drawable() {
     }
     private val fill = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
 
-    fun setTint(c: Int) { tint = c; invalidateSelf() }
-
     override fun draw(c: Canvas) {
         val b = bounds
         if (b.isEmpty) return

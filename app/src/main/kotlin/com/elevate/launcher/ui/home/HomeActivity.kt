@@ -70,7 +70,7 @@ class HomeActivity : BaseActivity(), DrawerHost {
     private lateinit var searchPill: TextView
     private lateinit var gamingBanner: TextView
     private lateinit var pager: ViewPager2
-    private lateinit var dots: LinearLayout
+    private lateinit var dots: PageIndicator
     private lateinit var dock: CellGrid
     private lateinit var drawer: DrawerView
     private lateinit var drag: DragController
@@ -271,11 +271,14 @@ class HomeActivity : BaseActivity(), DrawerHost {
             setCurrentItem(1, false)
             registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
                 override fun onPageSelected(position: Int) { updateDots() }
+                override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {
+                    followPager(position + positionOffset)
+                }
             })
         }
         content.addView(pager, lp(MATCH, 0, 1f))
 
-        dots = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER }
+        dots = PageIndicator(this)
         content.addView(dots, lp(MATCH, dp(18)))
 
         // dock
@@ -298,19 +301,13 @@ class HomeActivity : BaseActivity(), DrawerHost {
     }
 
     private fun updateDots() {
-        dots.removeAllViews()
-        val n = pageCount()
         val cur = if (::pager.isInitialized) pager.currentItem else 1
-        for (i in 0 until n) {
-            val sel = i == cur
-            val d = View(this)
-            d.background = GradientDrawable().apply {
-                shape = GradientDrawable.RECTANGLE
-                cornerRadius = dpf(if (i == 0) 2f else 3f)
-                setColor(if (sel) HomeStyle.text else (HomeStyle.text and 0x00FFFFFF) or 0x55000000)
-            }
-            dots.addView(d, lp(if (sel) dp(16) else dp(6), dp(6)).apply { leftMargin = dp(3); rightMargin = dp(3) })
-        }
+        dots.configure(pageCount(), Prefs.navStyle, HomeStyle.text, (HomeStyle.text and 0x00FFFFFF) or 0x55000000, cur)
+    }
+
+    /** Keeps the page indicator in step with the pager while the finger is still dragging. */
+    private fun followPager(position: Float) {
+        if (::dots.isInitialized) dots.setPosition(position)
     }
 
     // ------------------------------------------------------------------ pages
