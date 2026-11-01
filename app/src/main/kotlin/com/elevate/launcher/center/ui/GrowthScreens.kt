@@ -38,21 +38,58 @@ class AsyncBox<T : Any>(
     private val draw: (LinearLayout, T) -> Unit,
     private val sig: (T) -> String
 ) {
-    private var cached: T? = null
+    @Volatile private var cached: T? = null
     private var cachedSig = ""
-    private var box: LinearLayout? = null
+    @Volatile private var box: LinearLayout? = null
+    private var builds = 0
 
     fun view(): LinearLayout {
         val b = host.vbox()
         box = b
+        builds++
+        val n = builds
         val c = cached
         if (c != null) draw(b, c) else {
             b.addView(com.elevate.launcher.core.Skeleton(host, 120), lp(MATCH, WRAP).apply { bottomMargin = host.dp(10) })
             b.addView(com.elevate.launcher.core.Skeleton(host, 84), lp(MATCH, WRAP).apply { bottomMargin = host.dp(10) })
             b.addView(com.elevate.launcher.core.Skeleton(host, 84), lp(MATCH, WRAP))
         }
-        fetch(b)
+        // The first read waits until the placeholder is about to be drawn, so the screen appears first and the database
+        // work does not compete with it on a slow phone. A refresh (data already shown) reads straight away.
+        if (c != null) fetch(b, n) else afterFirstLayout(b) { fetch(b, n) }
+        if (c == null) watchdog(b, n)
         return b
+    }
+
+    /**
+     * Diagnostics for the automated test (log lines under the ElevateCI tag only): if a placeholder is still showing after
+     * 2.5 seconds, say what the main thread is doing, so a slow or blocked screen can be told apart from a lost result.
+     */
+    private fun watchdog(b: LinearLayout, n: Int) {
+        val t = Thread {
+            try {
+                Thread.sleep(2500)
+                if (box === b && cached == null) {
+                    val main = android.os.Looper.getMainLooper().thread
+                    val st = main.stackTrace.take(14).joinToString(" < ") { it.className.substringAfterLast('.') + "." + it.methodName + ":" + it.lineNumber }
+                    android.util.Log.w("ElevateCI", "async #$n ${host.javaClass.simpleName}: still on placeholder after 2500 ms, attached=${b.isAttachedToWindow} main=${main.state} at $st")
+                }
+            } catch (_: InterruptedException) {
+            }
+        }
+        t.isDaemon = true
+        t.start()
+    }
+
+    private fun afterFirstLayout(v: View, run: () -> Unit) {
+        v.viewTreeObserver.addOnPreDrawListener(object : android.view.ViewTreeObserver.OnPreDrawListener {
+            override fun onPreDraw(): Boolean {
+                val vto = v.viewTreeObserver
+                if (vto.isAlive) vto.removeOnPreDrawListener(this)
+                run()
+                return true
+            }
+        })
     }
 
     /** Reads again and redraws if anything changed, without rebuilding the whole screen. */
@@ -61,11 +98,17 @@ class AsyncBox<T : Any>(
         fetch(b)
     }
 
-    private fun fetch(b: LinearLayout) {
+    private fun fetch(b: LinearLayout, n: Int = 0) {
+        val t0 = android.os.SystemClock.elapsedRealtime()
         Io.work {
             val fresh: T? = try { load() } catch (t: Throwable) { android.util.Log.e("Elevate", "could not read records", t); null }
+            val t1 = android.os.SystemClock.elapsedRealtime()
             Io.ui {
-                if (box !== b || host.isDestroyed) return@ui
+                val t2 = android.os.SystemClock.elapsedRealtime()
+                if (box !== b || host.isDestroyed) {
+                    if (n > 0) android.util.Log.i("ElevateCI", "async #$n: result dropped (newer view=${box !== b}, destroyed=${host.isDestroyed}), waited ${t2 - t0} ms")
+                    return@ui
+                }
                 if (fresh == null) {
                     if (cached == null) { b.removeAllViews(); b.noteCard("Could not read your records. Close this screen and open it again.") }
                     return@ui
@@ -75,7 +118,14 @@ class AsyncBox<T : Any>(
                     cached = fresh
                     cachedSig = s
                     b.removeAllViews()
-                    draw(b, fresh)
+                    try {
+                        draw(b, fresh)
+                    } catch (e: Throwable) {
+                        android.util.Log.e("Elevate", "could not draw this screen", e)
+                        android.util.Log.e("ElevateCI", "async #$n: draw failed: $e")
+                        throw e
+                    }
+                    if (n > 0) android.util.Log.i("ElevateCI", "async #$n ${host.javaClass.simpleName}: read ${t1 - t0} ms, waited for main ${t2 - t1} ms, drew ${android.os.SystemClock.elapsedRealtime() - t2} ms")
                 }
             }
         }

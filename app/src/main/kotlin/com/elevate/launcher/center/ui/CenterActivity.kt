@@ -154,6 +154,16 @@ class CenterActivity : BaseActivity() {
         val section = intent.getStringExtra(EXTRA_SECTION)
         if (section != null && section != "home") openSection(section, false)
         val t4 = android.os.SystemClock.elapsedRealtime()
+        val procStart = android.os.Process.getStartElapsedRealtime()
+        window.decorView.viewTreeObserver.addOnPreDrawListener(object : android.view.ViewTreeObserver.OnPreDrawListener {
+            override fun onPreDraw(): Boolean {
+                val vto = window.decorView.viewTreeObserver
+                if (vto.isAlive) vto.removeOnPreDrawListener(this)
+                val now = android.os.SystemClock.elapsedRealtime()
+                android.util.Log.i("ElevateCI", "startup center: process start to onCreate=${t0 - procStart}ms, onCreate to first frame=${now - t0}ms")
+                return true
+            }
+        })
         show()
         started = true
         // where the start-up time of this screen goes (read by the older-Android check)

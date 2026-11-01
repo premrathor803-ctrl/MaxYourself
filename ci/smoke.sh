@@ -266,6 +266,8 @@ while read -r name cls extras; do
   timeout 45 adb shell am start -W -n "$PKG/$cls" --ez ci_skip_onboarding true $extras >> out/starts.txt 2>&1 < /dev/null
   sleep 4
   shot "$name"
+  # a second look a few seconds later, to tell a slow first draw from one that never happens
+  case "$name" in sA-center|sA2-center-soft) sleep 6; shot "$name-late";; esac
 done < ci/style.txt
 
 # Customization centre driven through the real screen: choose, look at the preview, Apply, then read back what was saved
@@ -428,6 +430,10 @@ adb logcat -d -s AndroidRuntime:E ActivityManager:E > out/runtime.txt 2>&1 || tr
   echo "Self-test output from the app (ElevateCI log lines):"
   echo '```'
   head -c 4000 out/ci-log.txt
+  echo '```'
+  echo "Dashboard and screen loading (how long the read took, how long the main thread was busy, and a note if a placeholder stayed on screen):"
+  echo '```'
+  grep -E "async #" out/ci-log.txt | head -60
   echo '```'
   echo "Customization centre, driven through the real screen (chose Violet, Outline cards, Light, Dots, Reduced animation, then Apply; then Reset). Expect the first line to show those choices and the second the defaults (dark, electric, soft, balanced, pill, full):"
   echo '```'

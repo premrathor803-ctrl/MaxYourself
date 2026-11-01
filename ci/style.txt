@@ -3,6 +3,8 @@
 # Phone is in day mode here, so theme:system shows the light colours.
 sA-home .ui.home.HomeActivity --ei ci_page 1 --es ci_style theme:system+accent:violet+card_style:outline+nav_style:dots
 sA-center .center.ui.CenterActivity --ez ci_seed true
+sA2-center-soft .center.ui.CenterActivity --es ci_style card_style:soft
+sA3-center-outline-electric .center.ui.CenterActivity --es ci_style card_style:outline+accent:electric
 sA-customize .center.ui.CenterActivity --es section customize
 sA-gaming .gaming.GamingActivity
 sA-growth .center.ui.CenterActivity --es section growth

@@ -1,4 +1,4 @@
-# Elevate Launcher (V2, with the V3 height and gaming work)
+# Elevate Launcher (V4: premium visual redesign, on top of V2 and V3)
 
 An Android home-screen launcher with a built-in **Center**: offline habits, a home-workout
 library with a guided player, grooming and skincare education, posture and mobility, an optional
@@ -16,10 +16,33 @@ Uninstall V1 once, then install V2. Later builds update normally.
 
 ## What is in it
 
+**Look and motion (V4)**
+- One design system for every screen: a dark-first palette (`#08090D` / `#12141B` / `#191D27`, text `#F4F5F8`, secondary
+  `#9298A8`), electric blue `#648CFF` with a violet `#9272FF` partner, eight accent colours with hand-picked gradient
+  pairs, a light theme and a pure-black option. Gradients are used on primary buttons, progress and the active card only.
+  Contrast is checked by unit tests for every theme and accent (24 combinations): text 7:1, secondary text 4.5:1, accent used
+  as text 4.5:1, text on gradient buttons 4.5:1
+- Four card styles (soft, flat, outline, accent), 25 code-drawn icons on one grid (no image files), light numerals for large
+  figures, rounded borders instead of heavy shadows, ripple and press feedback on controls
+- **Dashboard**: a greeting (with your first name if you add one), three progress rings (habits today, workouts this week,
+  movement days), your level and XP, today's habits, workout, height and posture, Gaming mode status, achievements and quick
+  actions. Layout presets (Balanced, Focus, Explorer) and per-card show, hide and order
+- **XP and levels come only from what you log**: 10 per habit check-in, 50 per finished workout, 10 per movement, 5 per night
+  of sleep notes. Gaming time and height readings earn nothing, nothing is taken away for a missed day, and XP is recalculated
+  from your records, so deleting a record lowers it. Ten achievements unlock from real logs. A level-up or new achievement is
+  celebrated once
+- **Customization centre** (Settings, or the Customize chip on the dashboard): theme, pure black, accent colour, card style,
+  dashboard layout and card order, home page indicator (pill, dots, bar), animation level and an optional name. A preview
+  with sample numbers follows every choice and nothing changes in the app until you tap Apply. Reset puts the defaults back
+- **Motion**: screen transitions, staggered card entrance, animated rings and bars, count-up numbers, press feedback, an
+  indicator that follows your finger on the home pages, skeleton placeholders while data loads. Three levels (Full, Reduced,
+  Off). Android's own "remove animations" setting always wins, and the Performance profile can lower the level further.
+  Nothing needs an animation to be usable: every animation ends on the same state that is drawn without it
+
 **Launcher**
 - Home pages with a persistent layout, dock, folders, edit mode, a Center panel page
 - App drawer with search (apps, Center features, articles, exercises, plans)
-- Themes: system / light / dark, pure-black option, 7 accent colours
+- Themes: dark (default) / light / system, pure-black option, 8 accent colours
 - Grid size and spacing controls, performance profile, wallpaper toggle
 - Gestures you can set yourself: swipe up/down, double tap, long press, pinch in/out, two-finger swipes. Actions include
   open drawer, search, notifications, Center, settings, edit mode, Gaming mode, flashlight, hidden apps and lock screen
@@ -97,8 +120,8 @@ Uninstall V1 once, then install V2. Later builds update normally.
 - **No height-increase claims.** Posture work can change how tall you stand and look. Nothing here claims to
   add bone length after growth plates close.
 - The content is general education, not medical advice.
-- Tested on Android 10 and Android 7.0 emulators and by automated screenshots, plus 23 JVM unit tests of the calculation
-  code (unit conversion, growth maths, session maths, movement library). It has not been measured on real low-end hardware.
+- Tested on Android 10 and Android 7.0 emulators and by automated screenshots, plus 73 JVM unit tests of the calculation
+  code (unit conversion, growth maths, session maths, movement library, XP and levels, dashboard layout, motion rules, colour contrast). It has not been measured on real low-end hardware.
   The only numbers are emulator timings of one build against the one before it (cold start, memory, APK size), posted by CI
   with each build. They show there was no slowdown on the emulator, not how it feels on a real phone.
 - **Not exercised in an emulator:** the Do Not Disturb permission flow, the session reminder notification, typing into the
