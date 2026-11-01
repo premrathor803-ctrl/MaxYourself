@@ -89,6 +89,12 @@ adb logcat -d -s ElevateCI:I > out/ci-log.txt 2>&1 || true
 adb logcat -d -b crash > out/crash.txt 2>&1 || true
 adb logcat -d -s AndroidRuntime:E > out/runtime.txt 2>&1 || true
 
+# where the Center's start-up time goes (the app logs it): three cold starts, the numbers are milliseconds inside onCreate
+adb logcat -c
+for i in 1 2 3; do cold_start ".center.ui.CenterActivity" > /dev/null; done
+adb logcat -d -s ElevateCI:I | grep "startup center" > out/startup.txt 2>&1 || true
+
+
 {
   echo "Older-Android check and before/after measurement ($(cat out/compat-env.txt))"
   echo
@@ -117,6 +123,10 @@ print(m if m=='n/a' else str(round(int(m)/1024,1))+' MB')")
   echo "Monkey summary:"
   echo '```'
   grep -E "CRASH|ANR|Events injected|Monkey finished" out/monkey.txt | head -10
+  echo '```'
+  echo "Where the Center's start-up time goes inside the app (three cold starts, ms):"
+  echo '```'
+  cat out/startup.txt
   echo '```'
   echo "In-app self-checks on this Android version:"
   echo '```'

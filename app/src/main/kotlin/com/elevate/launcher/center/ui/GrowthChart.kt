@@ -135,8 +135,24 @@ class GrowthChart(ctx: Context) : View(ctx) {
                 val y = py(pts[i].value)
                 if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
             }
-            line.color = Palette.accent
+            // soft fill and a gradient line; the paint alpha is reset because a shader is multiplied by it
+            val fillPath = Path(path)
+            fillPath.lineTo(px(pts.lastIndex), bottom)
+            fillPath.lineTo(px(0), bottom)
+            fillPath.close()
+            val area = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG)
+            area.color = 0xFF000000.toInt()
+            area.shader = android.graphics.LinearGradient(
+                0f, top, 0f, bottom,
+                com.elevate.launcher.core.ColorMath.withAlpha(Palette.accent, 0.22f),
+                com.elevate.launcher.core.ColorMath.withAlpha(Palette.accent, 0f),
+                android.graphics.Shader.TileMode.CLAMP
+            )
+            c.drawPath(fillPath, area)
+            line.color = 0xFF000000.toInt()
+            line.shader = android.graphics.LinearGradient(left, 0f, right, 0f, Palette.accent, Palette.accent2, android.graphics.Shader.TileMode.CLAMP)
             c.drawPath(path, line)
+            line.shader = null
         }
         for (i in pts.indices) {
             dot.color = Palette.accent

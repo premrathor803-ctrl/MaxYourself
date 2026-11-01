@@ -1,11 +1,16 @@
 package com.elevate.launcher.center.ui
 
+import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Canvas
+import android.graphics.LinearGradient
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RectF
+import android.graphics.Shader
 import android.view.View
+import com.elevate.launcher.core.ColorMath
+import com.elevate.launcher.core.Motion
 import com.elevate.launcher.core.Palette
 import com.elevate.launcher.core.dp
 import com.elevate.launcher.core.dpf
@@ -21,8 +26,11 @@ class BarChart(ctx: Context) : View(ctx) {
     private val barPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { textAlign = Paint.Align.CENTER }
     private val basePaint = Paint()
+    private var reveal = 1f
+    private var anim: ValueAnimator? = null
 
     fun set(values: List<Float>, labels: List<String>, max: Float? = null, unit: String = "", highlight: Int = -1) {
+        val changed = this.values != values
         this.values = values
         this.labels = labels
         this.unit = unit
@@ -32,7 +40,20 @@ class BarChart(ctx: Context) : View(ctx) {
         contentDescription = values.indices.joinToString(", ") { i ->
             (labels.getOrNull(i) ?: "") + " " + fmtNum(values[i].toDouble()) + unit
         }
+        // bars grow up from the baseline when the data is new; with animation off they are simply there
+        anim?.cancel()
+        anim = null
+        reveal = 1f
+        if (changed && values.any { it > 0f }) {
+            reveal = 0f
+            anim = Motion.value(0f, 1f, 650L) { reveal = it; invalidate() }
+        }
         invalidate()
+    }
+
+    override fun onDetachedFromWindow() {
+        anim?.cancel()
+        super.onDetachedFromWindow()
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -55,11 +76,18 @@ class BarChart(ctx: Context) : View(ctx) {
         for (i in 0 until n) {
             val cx = slot * i + slot / 2f
             val v = values[i]
-            val h = if (v <= 0f) 0f else Math.max(context.dpf(3f), v / maxV * chartH)
-            barPaint.color = if (i == highlight) Palette.accent else (Palette.accent and 0x00FFFFFF) or 0xB0000000.toInt()
+            val h = (if (v <= 0f) 0f else Math.max(context.dpf(3f), v / maxV * chartH)) * reveal
+            if (i == highlight) {
+                // the bar that matters is a gradient (violet at the top, accent at the base); the rest are quiet
+                barPaint.color = 0xFF000000.toInt()
+                barPaint.shader = LinearGradient(0f, topPad + chartH - h, 0f, topPad + chartH, Palette.accent2, Palette.accent, Shader.TileMode.CLAMP)
+            } else {
+                barPaint.shader = null
+                barPaint.color = ColorMath.withAlpha(Palette.accent, 0.62f)
+            }
             if (h > 0f) {
                 val r = RectF(cx - bw / 2f, topPad + chartH - h, cx + bw / 2f, topPad + chartH)
-                c.drawRoundRect(r, context.dpf(4f), context.dpf(4f), barPaint)
+                c.drawRoundRect(r, context.dpf(5f), context.dpf(5f), barPaint)
                 textPaint.color = Palette.text
                 val shown = if (narrow) Math.round(v).toString() else fmtNum(v.toDouble())
                 c.drawText(shown, cx, topPad + chartH - h - context.dpf(4f), textPaint)
@@ -82,6 +110,7 @@ class LineChart(ctx: Context) : View(ctx) {
     private var unit = ""
     private val line = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = ctx.dpf(2.5f); strokeJoin = Paint.Join.ROUND }
     private val dot = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val area = Paint(Paint.ANTI_ALIAS_FLAG)
     private val txt = Paint(Paint.ANTI_ALIAS_FLAG)
     private val grid = Paint().apply { strokeWidth = 1f }
 
@@ -130,7 +159,6 @@ class LineChart(ctx: Context) : View(ctx) {
         txt.textAlign = Paint.Align.RIGHT
         c.drawText(lastLabel, right, height - context.dpf(6f), txt)
 
-        line.color = Palette.accent
         dot.color = Palette.accent
         if (ys.size > 1) {
             val p = Path()
@@ -138,9 +166,23 @@ class LineChart(ctx: Context) : View(ctx) {
                 val x = px(xs[i]); val y = py(ys[i])
                 if (i == 0) p.moveTo(x, y) else p.lineTo(x, y)
             }
+            // a soft fill under the line, then the line itself in the accent gradient (paint alpha is reset because a shader is multiplied by it)
+            val fillPath = Path(p)
+            fillPath.lineTo(px(xs.last()), bottom)
+            fillPath.lineTo(px(xs.first()), bottom)
+            fillPath.close()
+            area.color = 0xFF000000.toInt()
+            area.shader = LinearGradient(0f, top, 0f, bottom, ColorMath.withAlpha(Palette.accent, 0.24f), ColorMath.withAlpha(Palette.accent, 0f), Shader.TileMode.CLAMP)
+            c.drawPath(fillPath, area)
+            line.color = 0xFF000000.toInt()
+            line.shader = LinearGradient(left, 0f, right, 0f, Palette.accent, Palette.accent2, Shader.TileMode.CLAMP)
             c.drawPath(p, line)
+            line.shader = null
         }
         for (i in ys.indices) c.drawCircle(px(xs[i]), py(ys[i]), context.dpf(4f), dot)
+        // the latest reading gets a halo
+        dot.color = ColorMath.withAlpha(Palette.accent, 0.25f)
+        c.drawCircle(px(xs.last()), py(ys.last()), context.dpf(9f), dot)
     }
 
     private fun fmtAxis(v: Float) = String.format(Locale.US, "%.1f", v) + unit
@@ -158,11 +200,14 @@ class ProgressBar2(ctx: Context) : View(ctx) {
 
     override fun onDraw(c: Canvas) {
         val r = height / 2f
+        paint.shader = null
         paint.color = Palette.surface2
         c.drawRoundRect(0f, 0f, width.toFloat(), height.toFloat(), r, r, paint)
         if (progress > 0f) {
-            paint.color = Palette.accent
+            paint.color = 0xFF000000.toInt()
+            paint.shader = LinearGradient(0f, 0f, Math.max(width.toFloat(), 1f), 0f, Palette.accent, Palette.accent2, Shader.TileMode.CLAMP)
             c.drawRoundRect(0f, 0f, Math.max(height.toFloat(), width * progress), height.toFloat(), r, r, paint)
+            paint.shader = null
         }
     }
 }

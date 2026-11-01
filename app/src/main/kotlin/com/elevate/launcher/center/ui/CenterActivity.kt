@@ -99,9 +99,12 @@ class CenterActivity : BaseActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val t0 = android.os.SystemClock.elapsedRealtime()
         super.onCreate(savedInstanceState)
+        val t1 = android.os.SystemClock.elapsedRealtime()
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         Center.init(this)
+        val t2 = android.os.SystemClock.elapsedRealtime()
 
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -131,6 +134,7 @@ class CenterActivity : BaseActivity() {
         root.addView(body, lp(MATCH, 0, 1f))
         setContentView(root)
         edgeToEdge(root)
+        val t3 = android.os.SystemClock.elapsedRealtime()
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() { back() }
@@ -149,8 +153,12 @@ class CenterActivity : BaseActivity() {
         ciPhotos()
         val section = intent.getStringExtra(EXTRA_SECTION)
         if (section != null && section != "home") openSection(section, false)
+        val t4 = android.os.SystemClock.elapsedRealtime()
         show()
         started = true
+        // where the start-up time of this screen goes (read by the older-Android check)
+        val t5 = android.os.SystemClock.elapsedRealtime()
+        android.util.Log.i("ElevateCI", "startup center: base=${t1 - t0}ms database=${t2 - t1}ms frame=${t3 - t2}ms setup=${t4 - t3}ms first screen=${t5 - t4}ms")
         ciGrowthHooks()
     }
 
@@ -265,6 +273,7 @@ class CenterActivity : BaseActivity() {
             val pad = LinearLayout(this)
             pad.orientation = LinearLayout.VERTICAL
             pad.setPadding(dp(16), dp(4), dp(16), dp(28))
+            pad.clipToPadding = false // lets a sideways row run to the screen edge
             pad.addView(content, lp(MATCH, WRAP))
             sv.addView(pad, FrameLayout.LayoutParams(MATCH, WRAP))
             body.addView(sv, FrameLayout.LayoutParams(MATCH, MATCH))

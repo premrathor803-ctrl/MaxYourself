@@ -142,6 +142,7 @@ class HomeActivity : BaseActivity(), DrawerHost {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
+        ciStyle() // test hook: the launcher is already running when the emulator test changes the look
         if (intent.action == Intent.ACTION_MAIN && intent.hasCategory(Intent.CATEGORY_HOME)) {
             if (drawer.isOpen) drawer.close()
             else if (editing) exitEdit()

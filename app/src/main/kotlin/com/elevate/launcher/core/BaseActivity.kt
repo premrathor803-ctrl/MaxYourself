@@ -17,7 +17,7 @@ open class BaseActivity : AppCompatActivity() {
      * Test hook for the emulator run: "theme:light+accent:violet" sets appearance settings before the screen is built, so
      * every theme can be looked at without tapping through Settings. Only appearance keys are accepted.
      */
-    private fun ciStyle() {
+    protected fun ciStyle() {
         val spec = intent?.getStringExtra("ci_style") ?: return
         val allowed = setOf("theme", "accent", "amoled", "card_style", "dash_layout", "dash_order", "dash_hidden", "nav_style", "motion", "user_name", "perf")
         var nightChanged = false
@@ -31,7 +31,8 @@ open class BaseActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        ciStyle()
+        // only on a fresh start: a restart for a theme change must not put the test's settings back
+        if (savedInstanceState == null) ciStyle()
         theme.applyStyle(Palette.accentStyle(Prefs.accent), true)
         super.onCreate(savedInstanceState)
         Palette.update(this)

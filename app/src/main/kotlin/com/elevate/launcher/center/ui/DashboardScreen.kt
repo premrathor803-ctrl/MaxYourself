@@ -234,14 +234,20 @@ class DashboardScreen(host: CenterActivity) : Screen(host) {
         chip("gaming", "Gaming") { host.startActivity(Intent(host, GamingActivity::class.java)) }
         chip("palette", "Customize") { host.openSection("customize") }
         hs.addView(row)
-        col.addView(hs, lp(MATCH, WRAP).apply { bottomMargin = host.dp(10) })
+        col.addView(hs, bleed(10))
     }
 
+    /** A sideways row that runs to the screen edges (the page keeps 16 dp of padding, the row cancels it and pads itself). */
     private fun hScroll(): HorizontalScrollView = HorizontalScrollView(host).apply {
         isHorizontalScrollBarEnabled = false
         overScrollMode = View.OVER_SCROLL_NEVER
         isFillViewport = false
+        clipToPadding = false
+        setPadding(host.dp(16), 0, host.dp(16), 0)
     }
+
+    private fun bleed(bottom: Int): LinearLayout.LayoutParams =
+        lp(MATCH, WRAP).apply { leftMargin = -host.dp(16); rightMargin = -host.dp(16); bottomMargin = host.dp(bottom) }
 
     // -------------------------------------------------------------------------------------------- habits
     private fun habits(col: LinearLayout, d: DashData) {
@@ -259,7 +265,7 @@ class DashboardScreen(host: CenterActivity) : Screen(host) {
             val row = host.hbox()
             for (h in d.due.take(12)) row.addView(habitCard(h, d), lp(host.dp(150), WRAP).apply { rightMargin = host.dp(10) })
             hs.addView(row)
-            col.addView(hs, lp(MATCH, WRAP).apply { bottomMargin = host.dp(8) })
+            col.addView(hs, bleed(8))
             if (d.due.size > 12) col.para("+${d.due.size - 12} more in Habits", sp = 12.5f)
         }
         col.tapCard("All habits", "History, streaks and editing") { host.openSection("habits") }
@@ -542,7 +548,7 @@ class DashboardScreen(host: CenterActivity) : Screen(host) {
             row.addView(card, lp(host.dp(138), WRAP).apply { rightMargin = host.dp(10) })
         }
         hs.addView(row)
-        col.addView(hs, lp(MATCH, WRAP).apply { bottomMargin = host.dp(10) })
+        col.addView(hs, bleed(10))
     }
 
     // -------------------------------------------------------------------------------------------- explore

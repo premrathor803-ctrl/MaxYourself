@@ -4,14 +4,16 @@ import android.content.Context
 import android.view.Gravity
 import android.widget.LinearLayout
 import android.widget.ScrollView
-import android.widget.TextView
 import com.elevate.launcher.center.content.Plans
 import com.elevate.launcher.center.data.Days
 import com.elevate.launcher.center.data.HState
 import com.elevate.launcher.center.data.HabitRepo
 import com.elevate.launcher.center.data.WorkoutRepo
+import com.elevate.launcher.center.ui.iconFor
 import com.elevate.launcher.center.ui.stateOfDay
+import com.elevate.launcher.core.Ico
 import com.elevate.launcher.core.MATCH
+import com.elevate.launcher.core.Motion
 import com.elevate.launcher.core.Palette
 import com.elevate.launcher.core.Prefs
 import com.elevate.launcher.core.UiKit
@@ -48,13 +50,15 @@ class CenterPanelView(ctx: Context, private val open: (String?) -> Unit) : Scrol
     fun refresh() {
         col.removeAllViews()
         val ctx = context
-        col.addView(UiKit.text(ctx, "Center", 30f, HomeStyle.text, true))
+        col.addView(UiKit.display(ctx, "Center", 34f, HomeStyle.text))
         col.addView(UiKit.text(ctx, Days.prettyLong(Days.today()), 14f, HomeStyle.dim), lp(MATCH, WRAP).apply { bottomMargin = ctx.dp(14) })
 
         val card = LinearLayout(ctx).apply {
             orientation = LinearLayout.VERTICAL
             background = cardBg()
             setPadding(ctx.dp(16), ctx.dp(14), ctx.dp(16), ctx.dp(14))
+            isClickable = true
+            Motion.press(this)
             setOnClickListener { open(null) }
         }
         try {
@@ -89,15 +93,17 @@ class CenterPanelView(ctx: Context, private val open: (String?) -> Unit) : Scrol
             val row = LinearLayout(ctx).apply { orientation = LinearLayout.HORIZONTAL }
             for (k in 0..1) {
                 val (label, section) = tiles[i + k]
-                val t = TextView(ctx).apply {
-                    text = label
-                    textSize = 15f
-                    setTextColor(HomeStyle.text)
-                    typeface = android.graphics.Typeface.DEFAULT_BOLD
+                val t = LinearLayout(ctx).apply {
+                    orientation = LinearLayout.HORIZONTAL
                     gravity = Gravity.CENTER_VERTICAL
                     background = cardBg()
-                    setPadding(ctx.dp(16), 0, ctx.dp(12), 0)
-                    minHeight = ctx.dp(56)
+                    setPadding(ctx.dp(14), 0, ctx.dp(12), 0)
+                    minimumHeight = ctx.dp(56)
+                    isClickable = true
+                    contentDescription = label
+                    Motion.press(this)
+                    iconFor(label)?.let { addView(Ico.view(ctx, it, 20, HomeStyle.text), lp(ctx.dp(20), ctx.dp(20)).apply { rightMargin = ctx.dp(10) }) }
+                    addView(UiKit.text(ctx, label, 15f, HomeStyle.text, true).apply { importantForAccessibility = android.view.View.IMPORTANT_FOR_ACCESSIBILITY_NO }, lp(WRAP, WRAP))
                     setOnClickListener { open(section) }
                 }
                 row.addView(t, lp(0, WRAP, 1f).apply { if (k == 0) rightMargin = ctx.dp(5) else leftMargin = ctx.dp(5) })
