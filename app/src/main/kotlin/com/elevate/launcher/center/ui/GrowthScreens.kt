@@ -57,28 +57,7 @@ class AsyncBox<T : Any>(
         // The first read waits until the placeholder is about to be drawn, so the screen appears first and the database
         // work does not compete with it on a slow phone. A refresh (data already shown) reads straight away.
         if (c != null) fetch(b, n) else afterFirstLayout(b) { fetch(b, n) }
-        if (c == null) watchdog(b, n)
         return b
-    }
-
-    /**
-     * Diagnostics for the automated test (log lines under the ElevateCI tag only): if a placeholder is still showing after
-     * 2.5 seconds, say what the main thread is doing, so a slow or blocked screen can be told apart from a lost result.
-     */
-    private fun watchdog(b: LinearLayout, n: Int) {
-        val t = Thread {
-            try {
-                Thread.sleep(2500)
-                if (box === b && cached == null) {
-                    val main = android.os.Looper.getMainLooper().thread
-                    val st = main.stackTrace.take(14).joinToString(" < ") { it.className.substringAfterLast('.') + "." + it.methodName + ":" + it.lineNumber }
-                    android.util.Log.w("ElevateCI", "async #$n ${host.javaClass.simpleName}: still on placeholder after 2500 ms, attached=${b.isAttachedToWindow} main=${main.state} at $st")
-                }
-            } catch (_: InterruptedException) {
-            }
-        }
-        t.isDaemon = true
-        t.start()
     }
 
     private fun afterFirstLayout(v: View, run: () -> Unit) {

@@ -123,7 +123,9 @@ Uninstall V1 once, then install V2. Later builds update normally.
 - Tested on Android 10 and Android 7.0 emulators and by automated screenshots, plus 73 JVM unit tests of the calculation
   code (unit conversion, growth maths, session maths, movement library, XP and levels, dashboard layout, motion rules, colour contrast). It has not been measured on real low-end hardware.
   The only numbers are emulator timings of one build against the one before it (cold start, memory, APK size), posted by CI
-  with each build. They show there was no slowdown on the emulator, not how it feels on a real phone.
+  with each build. On the Android 7.0 emulator the latest run read: Home 579 ms (before the redesign 571), Center 495 ms (562),
+  Gaming 708 ms (620, so the Gaming screen starts roughly 90 ms slower), memory 22.8 MB (22.3), APK 6.64 MB (6.55). These are
+  debug builds on an emulator, not how it feels on a real phone
 - **Not exercised in an emulator:** the Do Not Disturb permission flow, the session reminder notification, typing into the
   height form (its save, edit, duplicate and delete logic is checked by an in-app self-test instead), and the fade between
   Center screens (the test emulator turns animations off).

@@ -259,6 +259,9 @@ sleep 2
 # Style pass: other themes, accents, card styles and dashboard layouts, set through the ci_style test hook (the last line resets them)
 timeout 45 adb shell cmd uimode night no < /dev/null >> out/starts.txt 2>&1
 sleep 2
+# a system "create widget" prompt from the widget checks can still be open; close it so it does not cover the first picture
+timeout 45 adb shell input keyevent 4 < /dev/null >> out/starts.txt 2>&1
+sleep 1
 while read -r name cls extras; do
   [ -z "${name:-}" ] && continue
   case "$name" in \#*) continue;; esac
