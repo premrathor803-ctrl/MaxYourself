@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Older-Android check and before/after measurement, run on the emulator the workflow starts (API 24, the lowest Elevate supports).
-#  1. Measures the previous release (build-24, before the height/gaming/accessibility work) and the current build on the SAME emulator:
+#  1. Measures the previous release (build-28, before the visual redesign) and the current build on the SAME emulator:
 #     APK size, cold start time of three screens (median of 5 runs after one warm-up run), memory after settling.
 #  2. Opens the main screens of the current build on this Android version, runs the in-app self-tests and a short monkey run,
 #     and collects crashes.
@@ -65,7 +65,7 @@ bench() { # label apk
 
 : > out/bench.tsv
 : > out/install.txt
-bench "build-24 (before)" "$OLD"
+bench "build-28 (before the visual redesign)" "$OLD"
 bench "current build (after)" "$NEW"
 
 # ---- the current build on this Android version

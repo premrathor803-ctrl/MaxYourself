@@ -156,12 +156,12 @@ jobs:
           name: elevate-launcher-debug-apk
           path: apk
 
-      - name: Download the previous release (build-24) for the before/after measurement
+      - name: Download the previous release (build-28) for the before/after measurement
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mkdir -p old
-          gh release download build-24 --pattern app-debug.apk --dir old || echo "build-24 not available"
+          gh release download build-28 --pattern app-debug.apk --dir old || echo "build-28 not available"
 
       - name: Enable KVM
         run: |

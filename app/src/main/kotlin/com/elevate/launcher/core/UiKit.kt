@@ -107,5 +107,29 @@ object UiKit {
             setPadding(ctx.dp(10), ctx.dp(4), ctx.dp(10), ctx.dp(4))
         }
 
+    /**
+     * A status chip: a dot (with a soft halo while on) and a word, so the state never relies on colour alone.
+     * No animation, so it costs nothing on slow phones.
+     */
+    fun statusPill(ctx: Context, on: Boolean, onLabel: String = "ON", offLabel: String = "OFF"): LinearLayout {
+        val s = Palette.live()
+        val row = LinearLayout(ctx).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            background = rounded(if (on) ColorMath.withAlpha(s.accent, 0.20f) else s.divider, ctx.dpf(20f))
+            setPadding(ctx.dp(10), ctx.dp(4), ctx.dp(12), ctx.dp(4))
+            contentDescription = "Status: " + (if (on) onLabel else offLabel).lowercase()
+        }
+        val halo = android.widget.FrameLayout(ctx).apply { background = rounded(if (on) ColorMath.withAlpha(s.accent, 0.30f) else 0, ctx.dpf(8f)) }
+        val dot = View(ctx).apply { background = rounded(if (on) s.accent else s.dim, ctx.dpf(4f)) }
+        halo.addView(dot, android.widget.FrameLayout.LayoutParams(ctx.dp(8), ctx.dp(8), Gravity.CENTER))
+        row.addView(halo, lp(ctx.dp(16), ctx.dp(16)))
+        row.addView(
+            text(ctx, if (on) onLabel else offLabel, 11.5f, if (on) s.accentText else s.dim, true).apply { letterSpacing = 0.04f },
+            lp(WRAP, WRAP).apply { leftMargin = ctx.dp(6) }
+        )
+        return row
+    }
+
     fun spacer(ctx: Context, h: Int): View = View(ctx).apply { layoutParams = lp(MATCH, ctx.dp(h)) }
 }

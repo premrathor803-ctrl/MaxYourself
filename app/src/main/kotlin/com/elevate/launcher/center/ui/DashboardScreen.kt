@@ -203,6 +203,7 @@ class DashboardScreen(host: CenterActivity) : Screen(host) {
             Motion.flash(pill)
         }
         shown = Shown(floatArrayOf(d.ringHabits, d.ringWorkouts, d.ringMovement), d.xp, lv.level, lv.fraction)
+        if (firstDraw && host.intent.getBooleanExtra("ci_motion_selftest", false)) motionProbe(rings, xpText, bar, d)
     }
 
     // -------------------------------------------------------------------------------------------- quick actions
@@ -567,6 +568,25 @@ class DashboardScreen(host: CenterActivity) : Screen(host) {
             Triple("Photo journal", "Private progress photos", { host.openSection("photos") }),
             Triple("Height and growth", "Tracker, movement, guides", { host.openSection("growth") })
         )
+    }
+
+    /**
+     * Test hook for the emulator run: logs what the ring, the XP number and the XP bar are showing a moment after the
+     * dashboard is drawn. With animation on, the values must still be on their way (below the target) early on and equal to
+     * the target at the end; with animation off they must already be at the target.
+     */
+    private fun motionProbe(rings: RingsView, xp: CountText, bar: XpBar, d: DashData) {
+        val view = host.window.decorView
+        for (t in longArrayOf(40L, 200L, 500L, 2000L)) {
+            view.postDelayed({
+                val line = String.format(
+                    java.util.Locale.US,
+                    "motion probe level=%d t=%d ring=%.2f/%.2f xp=%.0f/%d bar=%.2f/%.2f",
+                    Motion.level, t, rings.displayed(1), d.ringWorkouts, xp.displayed(), d.xp, bar.displayed(), d.level.fraction
+                )
+                android.util.Log.i("ElevateCI", line)
+            }, t)
+        }
     }
 
     // -------------------------------------------------------------------------------------------- milestones

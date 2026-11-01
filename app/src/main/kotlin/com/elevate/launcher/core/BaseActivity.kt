@@ -13,7 +13,25 @@ import androidx.core.view.WindowInsetsCompat
 /** Applies accent + palette and offers edge-to-edge helpers. */
 open class BaseActivity : AppCompatActivity() {
 
+    /**
+     * Test hook for the emulator run: "theme:light+accent:violet" sets appearance settings before the screen is built, so
+     * every theme can be looked at without tapping through Settings. Only appearance keys are accepted.
+     */
+    private fun ciStyle() {
+        val spec = intent?.getStringExtra("ci_style") ?: return
+        val allowed = setOf("theme", "accent", "amoled", "card_style", "dash_layout", "dash_order", "dash_hidden", "nav_style", "motion", "user_name", "perf")
+        var nightChanged = false
+        for (pair in spec.split('+')) {
+            val kv = pair.split(':', limit = 2)
+            if (kv.size != 2 || kv[0] !in allowed) continue
+            if (kv[0] == "amoled") Prefs.putBool("amoled", kv[1] == "true") else Prefs.putString(kv[0], kv[1])
+            if (kv[0] == "theme") nightChanged = true
+        }
+        if (nightChanged) com.elevate.launcher.ElevateApp.applyNightMode()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        ciStyle()
         theme.applyStyle(Palette.accentStyle(Prefs.accent), true)
         super.onCreate(savedInstanceState)
         Palette.update(this)

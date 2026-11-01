@@ -1,0 +1,18 @@
+# Same format as activities.txt. Each block starts with a ci_style extra that changes the appearance settings for that
+# screen and every later one ("key:value+key:value"). The last line puts the defaults back.
+# Phone is in day mode here, so theme:system shows the light colours.
+sA-home .ui.home.HomeActivity --ei ci_page 1 --es ci_style theme:system+accent:violet+card_style:outline+nav_style:dots
+sA-center .center.ui.CenterActivity --ez ci_seed true
+sA-customize .center.ui.CenterActivity --es section customize
+sA-gaming .gaming.GamingActivity
+sA-growth .center.ui.CenterActivity --es section growth
+sA-settings .ui.settings.SettingsActivity
+sB-home .ui.home.HomeActivity --ei ci_page 1 --es ci_style theme:dark+amoled:true+accent:teal+card_style:flat+dash_layout:focus+nav_style:bar
+sB-center .center.ui.CenterActivity
+sB-customize .center.ui.CenterActivity --es section customize
+sB-workouts .center.ui.CenterActivity --es section workouts
+sC-center .center.ui.CenterActivity --es ci_style amoled:false+accent:gold+card_style:accent+dash_layout:explorer+user_name:Prem
+sC-progress .center.ui.CenterActivity --es section progress
+sC-habits .center.ui.CenterActivity --es section habits
+sD-center .center.ui.CenterActivity --es ci_style accent:rose+card_style:soft+dash_layout:balanced+dash_hidden:gaming,achievements+user_name:
+reset-center .center.ui.CenterActivity --es ci_style theme:dark+accent:electric+amoled:false+card_style:soft+dash_layout:balanced+dash_order:+dash_hidden:+nav_style:pill+motion:full+user_name:+perf:balanced

@@ -12,3 +12,5 @@ center-growth-selftest .center.ui.CenterActivity --es section growth --ez ci_gro
 gaming .gaming.GamingActivity
 gaming-seed .gaming.GamingActivity --ez ci_gaming_seed true
 privacy .privacy.PrivacyActivity
+center-customize .center.ui.CenterActivity --es section customize
+center-dash-motion .center.ui.CenterActivity --ez ci_seed true --ez ci_motion_selftest true

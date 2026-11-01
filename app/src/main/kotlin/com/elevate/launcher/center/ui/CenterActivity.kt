@@ -137,6 +137,11 @@ class CenterActivity : BaseActivity() {
         })
 
         intent.getStringExtra("ci_height_unit")?.let { Center.heightUnit = it }
+        // test hook: forget what the dashboard has already celebrated, so the next draw shows the level-up card
+        if (intent.getBooleanExtra("ci_celebrate", false)) {
+            com.elevate.launcher.core.Prefs.putInt("seen_level", 1)
+            com.elevate.launcher.core.Prefs.putString("seen_ach", "")
+        }
         stack.add(DashboardScreen(this))
         com.elevate.launcher.data.Io.work { com.elevate.launcher.reminders.Reminders.reschedule(applicationContext) }
         if (intent.getBooleanExtra("ci_seed", false)) CenterSeed.run()
@@ -154,6 +159,15 @@ class CenterActivity : BaseActivity() {
         val sdp = intent.getIntExtra("ci_scroll_dp", 0)
         if (sdp > 0) body.postDelayed({ scroll?.scrollTo(0, dp(sdp)) }, 1500)
         if (intent.getBooleanExtra("ci_growth_selftest", false)) GrowthSelfTest.run(applicationContext)
+        if (intent.getBooleanExtra("ci_log_style", false)) {
+            android.util.Log.i(
+                "ElevateCI",
+                "style saved: theme=${com.elevate.launcher.core.Prefs.theme} accent=${com.elevate.launcher.core.Prefs.accent} " +
+                    "amoled=${com.elevate.launcher.core.Prefs.amoled} card=${com.elevate.launcher.core.Prefs.cardStyle} " +
+                    "layout=${com.elevate.launcher.core.Prefs.dashLayout} nav=${com.elevate.launcher.core.Prefs.navStyle} " +
+                    "motion=${com.elevate.launcher.core.Prefs.motion} name=${com.elevate.launcher.core.Prefs.userName}"
+            )
+        }
         if (intent.getBooleanExtra("ci_height_add", false)) {
             body.postDelayed({ HeightEditor.open(this, null, com.elevate.launcher.center.data.MeasureRepo.list("height")) { refresh() } }, 1800)
         }

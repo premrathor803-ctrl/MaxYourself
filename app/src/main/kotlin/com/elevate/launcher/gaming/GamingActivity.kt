@@ -130,8 +130,10 @@ class GamingActivity : PageActivity() {
         }
 
         // ---- status
-        val status = UiKit.card(this)
-        status.addView(UiKit.text(this, if (on) "Gaming mode is ON" else "Gaming mode is off", 20f, if (on) Palette.accentText else Palette.text, true))
+        // the accent card style is the "glowing" active state; off uses the person's own card style
+        val status = if (on) UiKit.styledCard(this, Palette.live(), "accent") else UiKit.card(this)
+        status.addView(UiKit.statusPill(this, on), lp(WRAP, WRAP).apply { bottomMargin = dp(10) })
+        status.addView(UiKit.display(this, if (on) "Gaming mode is on" else "Gaming mode is off", 24f, Palette.text))
         val sub = if (on) {
             val t = Gaming.startedAt
             val mins = ((System.currentTimeMillis() - t) / 60000L).coerceAtLeast(0)
@@ -406,7 +408,7 @@ class GamingActivity : PageActivity() {
         val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; setPadding(0, dp(8), 0, dp(8)) }
         for ((v, c) in listOf(SessionMath.label(today) to "Today", SessionMath.label(week) to "Last 7 days", st.count.toString() to "Sessions saved")) {
             val cell = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER_HORIZONTAL }
-            cell.addView(UiKit.text(this, v, 17f, Palette.text, true).apply { gravity = Gravity.CENTER })
+            cell.addView(UiKit.display(this, v, 22f, Palette.text).apply { gravity = Gravity.CENTER })
             cell.addView(UiKit.text(this, c, 11.5f, Palette.dim).apply { gravity = Gravity.CENTER })
             row.addView(cell, lp(0, WRAP, 1f))
         }

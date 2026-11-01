@@ -266,7 +266,7 @@ class GrowthScreen(host: CenterActivity) : Screen(host) {
             } else {
                 val latest = d.heights.last()
                 val prev = d.heights.getOrNull(d.heights.size - 2)
-                addView(UiKit.text(host, HeightUnits.format(latest.value, inch), 30f, Palette.text, true), lp(MATCH, WRAP))
+                addView(UiKit.display(host, HeightUnits.format(latest.value, inch), 36f, Palette.text), lp(MATCH, WRAP))
                 para("Latest reading, " + Days.pretty(latest.day) + (if (latest.note.isNotEmpty()) " · " + latest.note else ""), sp = 13f, bottom = 6)
                 if (prev != null) {
                     val diff = latest.value - prev.value

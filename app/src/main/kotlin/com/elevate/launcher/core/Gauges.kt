@@ -252,6 +252,8 @@ class XpBar(ctx: Context) : View(ctx) {
         c.drawRoundRect(rect, h / 2f, h / 2f, p)
         val fillW = Math.max(h, w * shown)
         if (shown > 0.003f) {
+            // a shader is multiplied by the paint's alpha, and the track colour is mostly transparent, so reset it
+            p.color = 0xFF000000.toInt()
             p.shader = LinearGradient(0f, 0f, Math.max(w, 1f), 0f, from, to, Shader.TileMode.CLAMP)
             rect.set(0f, 0f, fillW, h)
             c.drawRoundRect(rect, h / 2f, h / 2f, p)

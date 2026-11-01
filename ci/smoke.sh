@@ -256,6 +256,105 @@ done < ci/large.txt
 timeout 45 adb shell settings put system font_scale 1.0 < /dev/null >> out/starts.txt 2>&1
 sleep 2
 
+# Style pass: other themes, accents, card styles and dashboard layouts, set through the ci_style test hook (the last line resets them)
+timeout 45 adb shell cmd uimode night no < /dev/null >> out/starts.txt 2>&1
+sleep 2
+while read -r name cls extras; do
+  [ -z "${name:-}" ] && continue
+  case "$name" in \#*) continue;; esac
+  echo "== $name ($cls)" >> out/starts.txt
+  timeout 45 adb shell am start -W -n "$PKG/$cls" --ez ci_skip_onboarding true $extras >> out/starts.txt 2>&1 < /dev/null
+  sleep 4
+  shot "$name"
+done < ci/style.txt
+
+# Customization centre driven through the real screen: choose, look at the preview, Apply, then read back what was saved
+swipe_dir() { # up|down, how many times
+  local from to
+  if [ "$1" = "down" ]; then from=70; to=40; else from=30; to=75; fi
+  for i in $(seq 1 "$2"); do timeout 45 adb shell input swipe $(( SW / 2 )) $(( SH * from / 100 )) $(( SW / 2 )) $(( SH * to / 100 )) 250 < /dev/null >> out/starts.txt 2>&1; done
+}
+tap_find() { # scrolls down until the label is on screen, then taps it
+  local i xy
+  for i in 1 2 3 4 5 6 7 8; do
+    xy=$(tap_text "$1")
+    if [ -n "$xy" ]; then
+      timeout 45 adb shell input tap $xy < /dev/null >> out/starts.txt 2>&1
+      echo "tapped '$1' at $xy" >> out/starts.txt
+      return 0
+    fi
+    swipe_dir down 1
+    sleep 1
+  done
+  echo "could not find '$1' by scrolling" >> out/starts.txt
+}
+timeout 45 adb shell am start -W -n "$PKG/.center.ui.CenterActivity" --ez ci_skip_onboarding true --es section customize < /dev/null >> out/starts.txt 2>&1
+sleep 3
+shot cz1-default
+tap_find "Light"
+sleep 1
+tap_find "Violet"
+sleep 1
+tap_find "Outline"
+sleep 1
+tap_find "Dots"
+sleep 1
+tap_find "Reduced"
+sleep 1
+swipe_dir up 10
+sleep 1
+shot cz2-preview-light-violet-outline
+tap_find "Apply"
+sleep 4
+shot cz3-after-apply
+timeout 45 adb shell am start -W -n "$PKG/.center.ui.CenterActivity" --ez ci_skip_onboarding true --ez ci_log_style true < /dev/null >> out/starts.txt 2>&1
+sleep 3
+shot cz4-center-light-violet
+timeout 45 adb shell am start -W -n "$PKG/.ui.home.HomeActivity" --ez ci_skip_onboarding true --ei ci_page 1 < /dev/null >> out/starts.txt 2>&1
+sleep 4
+shot cz5-home-after-apply
+timeout 45 adb shell am start -W -n "$PKG/.center.ui.CenterActivity" --ez ci_skip_onboarding true --es section customize < /dev/null >> out/starts.txt 2>&1
+sleep 3
+tap_find "Reset to the default look"
+sleep 2
+shot cz6-reset-dialog
+tap_label "Reset"
+sleep 4
+shot cz7-after-reset
+timeout 45 adb shell am start -W -n "$PKG/.center.ui.CenterActivity" --ez ci_skip_onboarding true --ez ci_log_style true < /dev/null >> out/starts.txt 2>&1
+sleep 3
+timeout 45 adb shell cmd uimode night no < /dev/null >> out/starts.txt 2>&1
+
+# Celebration card: forget what was already celebrated, open the seeded dashboard, then check it is shown only once
+timeout 45 adb shell am start -W -n "$PKG/.center.ui.CenterActivity" --ez ci_skip_onboarding true --ez ci_seed true --ez ci_celebrate true < /dev/null >> out/starts.txt 2>&1
+sleep 4
+shot ce1-celebrate
+tap_label "Nice"
+sleep 2
+timeout 45 adb shell am force-stop "$PKG" < /dev/null >> out/starts.txt 2>&1
+timeout 45 adb shell am start -W -n "$PKG/.center.ui.CenterActivity" < /dev/null >> out/starts.txt 2>&1
+sleep 4
+shot ce2-second-open-no-card
+
+# Animation self-test: the phone's animation scale is turned on for this part only. The dashboard logs what its ring, XP number
+# and XP bar show 40, 200, 500 and 2000 ms after it is drawn, for each Elevate animation setting and for the phone's own setting off.
+for scale in 1 0; do
+  for mode in full reduced off; do
+    [ "$scale" = "0" ] && [ "$mode" != "full" ] && continue
+    timeout 45 adb shell settings put global animator_duration_scale $scale < /dev/null >> out/starts.txt 2>&1
+    timeout 45 adb shell settings put global transition_animation_scale $scale < /dev/null >> out/starts.txt 2>&1
+    timeout 45 adb shell am force-stop "$PKG" < /dev/null >> out/starts.txt 2>&1
+    timeout 45 adb shell log -t ElevateCI -p i "motion test: phone animation scale=$scale, Elevate animation=$mode" < /dev/null >> out/starts.txt 2>&1
+    timeout 45 adb shell am start -W -n "$PKG/.center.ui.CenterActivity" --ez ci_skip_onboarding true --ez ci_seed true --ez ci_motion_selftest true --es ci_style motion:$mode < /dev/null >> out/starts.txt 2>&1
+    sleep 1
+    shot "mo-scale$scale-$mode-early"
+    sleep 4
+  done
+done
+timeout 45 adb shell settings put global animator_duration_scale 0 < /dev/null >> out/starts.txt 2>&1
+timeout 45 adb shell settings put global transition_animation_scale 0 < /dev/null >> out/starts.txt 2>&1
+timeout 45 adb shell am start -W -n "$PKG/.center.ui.CenterActivity" --ez ci_skip_onboarding true --es ci_style motion:full < /dev/null >> out/starts.txt 2>&1
+
 # Random UI events inside our package
 adb shell monkey -p "$PKG" --throttle 150 -s 42 --pct-syskeys 0 -v 700 > out/monkey.txt 2>&1 || true
 sleep 2
@@ -329,6 +428,14 @@ adb logcat -d -s AndroidRuntime:E ActivityManager:E > out/runtime.txt 2>&1 || tr
   echo "Self-test output from the app (ElevateCI log lines):"
   echo '```'
   head -c 4000 out/ci-log.txt
+  echo '```'
+  echo "Customization centre, driven through the real screen (chose Violet, Outline cards, Light, Dots, Reduced animation, then Apply; then Reset). Expect the first line to show those choices and the second the defaults (dark, electric, soft, balanced, pill, full):"
+  echo '```'
+  grep "style saved" out/ci-log.txt | head -5
+  echo '```'
+  echo "Animation self-test (the three numbers are what is on screen / what it should end at; level 2 = full, 1 = reduced, 0 = off):"
+  echo '```'
+  grep -E "motion test|motion probe" out/ci-log.txt | head -40
   echo '```'
   echo "Gaming tracking self-check (open a game from Elevate, come back: expect game_sessions=1 tracked=1 active=false):"
   echo '```'
