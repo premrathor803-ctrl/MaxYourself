@@ -59,6 +59,9 @@ class DashData(
 object DashLoad {
     private const val LONG_AGO = "2000-01-01"
 
+    /** Set by the automated test only: writes the counts XP is made from to the log, so they can be compared with what was seeded. */
+    @Volatile var ciLog = false
+
     fun load(): DashData {
         val today = Days.today()
         val ws = Days.weekStart(today)
@@ -98,16 +101,22 @@ object DashLoad {
             android.util.Log.w("Elevate", "could not read game sessions for the dashboard", t)
         }
 
-        var checks = 0
-        for (h in HabitRepo.all(true)) checks += HabitRepo.completedCount(h, LONG_AGO, today)
+        // Everything XP needs is a count, read with one query each (never a walk over every day of the history).
         val stats = XpMath.Stats(
-            habitChecks = checks,
+            habitChecks = HabitRepo.checkInCount(),
             workouts = WorkoutRepo.completedCount(LONG_AGO, today),
             movements = ActivityRepo.count(),
-            sleepNights = SleepRepo.recent(100000).size,
-            heightReadings = MeasureRepo.list("height").size
+            sleepNights = SleepRepo.count(),
+            heightReadings = MeasureRepo.count("height")
         )
         val xp = XpMath.xp(stats)
+        if (ciLog) {
+            android.util.Log.i(
+                "ElevateCI",
+                "dashboard stats: habit check-ins=${stats.habitChecks} workouts=${stats.workouts} movements=${stats.movements} " +
+                    "sleep nights=${stats.sleepNights} height readings=${stats.heightReadings} xp=$xp"
+            )
+        }
         return DashData(
             today, habits.size, due, WorkoutRepo.completedToday(),
             resumePlan?.name, resume?.states?.values?.count { it == "done" || it == "skipped" } ?: 0, resumePlan?.steps?.size ?: 0,

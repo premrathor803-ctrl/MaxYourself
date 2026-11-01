@@ -151,6 +151,17 @@ object HabitRepo {
         return HabitStats(run, best, done30, sched30, total)
     }
 
+    /**
+     * Habit check-ins the person has made (days marked done), in one query however long the history is. Used for XP. Habits
+     * that complete themselves from a finished workout are not counted here, because the workout already earns its own XP.
+     */
+    fun checkInCount(): Int {
+        val c = Center.db.rawQuery(
+            "SELECT COUNT(*) FROM habit_log l JOIN habits h ON h.id = l.habit_id WHERE l.state=$LOG_DONE AND l.day<=?", arrayOf(Days.today())
+        )
+        return c.use { if (it.moveToFirst()) it.getInt(0) else 0 }
+    }
+
     /** Number of completed days for [h] between two days (inclusive). */
     fun completedCount(h: Habit, from: String, to: String): Int {
         val today = Days.today()

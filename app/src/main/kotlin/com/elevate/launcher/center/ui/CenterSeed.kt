@@ -32,14 +32,16 @@ object CenterSeed {
             HabitRepo.insert(Habit(0, s.name, s.descr, s.category, s.slot, s.freq, s.days, start, s.target, s.method))
         }
         val past = Days.range(start, Days.add(today, -1))
+        var doneWritten = 0
         for ((hi, hid) in ids.withIndex()) {
             for ((di, d) in past.withIndex()) {
                 val r = (di * 7 + hi * 3) % 10
-                if (r < 6) HabitRepo.setState(hid, d, HabitRepo.LOG_DONE)
+                if (r < 6) { HabitRepo.setState(hid, d, HabitRepo.LOG_DONE); doneWritten++ }
                 else if (r == 6) HabitRepo.setState(hid, d, HabitRepo.LOG_SKIPPED)
             }
         }
 
+        android.util.Log.i("ElevateCI", "seed: habit check-ins written=$doneWritten")
         val keys = listOf("beginner_full_a", "beginner_full_b", "core_basic", "mobility_flex")
         val now = System.currentTimeMillis()
         var n = 0

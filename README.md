@@ -27,7 +27,7 @@ Uninstall V1 once, then install V2. Later builds update normally.
 - **Dashboard**: a greeting (with your first name if you add one), three progress rings (habits today, workouts this week,
   movement days), your level and XP, today's habits, workout, height and posture, Gaming mode status, achievements and quick
   actions. Layout presets (Balanced, Focus, Explorer) and per-card show, hide and order
-- **XP and levels come only from what you log**: 10 per habit check-in, 50 per finished workout, 10 per movement, 5 per night
+- **XP and levels come only from what you log**: 10 per habit check-in (a habit that ticks itself from a finished workout adds nothing extra, the workout already earned its 50), 50 per finished workout, 10 per movement, 5 per night
   of sleep notes. Gaming time and height readings earn nothing, nothing is taken away for a missed day, and XP is recalculated
   from your records, so deleting a record lowers it. Ten achievements unlock from real logs. A level-up or new achievement is
   celebrated once

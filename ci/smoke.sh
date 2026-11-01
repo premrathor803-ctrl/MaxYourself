@@ -435,6 +435,10 @@ adb logcat -d -s AndroidRuntime:E ActivityManager:E > out/runtime.txt 2>&1 || tr
   echo '```'
   grep -E "async #" out/ci-log.txt | head -60
   echo '```'
+  echo "XP check (the seed wrote the habit check-ins below; the dashboard must count the same number. XP = 10 per check-in + 50 per workout + 10 per movement + 5 per sleep night):"
+  echo '```'
+  grep -E "seed: habit|dashboard stats" out/ci-log.txt | head -6
+  echo '```'
   echo "Customization centre, driven through the real screen (chose Violet, Outline cards, Light, Dots, Reduced animation, then Apply; then Reset). Expect the first line to show those choices and the second the defaults (dark, electric, soft, balanced, pill, full):"
   echo '```'
   grep "style saved" out/ci-log.txt | head -5

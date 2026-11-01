@@ -148,7 +148,7 @@ class CenterActivity : BaseActivity() {
         }
         stack.add(DashboardScreen(this))
         com.elevate.launcher.data.Io.work { com.elevate.launcher.reminders.Reminders.reschedule(applicationContext) }
-        if (intent.getBooleanExtra("ci_seed", false)) CenterSeed.run()
+        if (intent.getBooleanExtra("ci_seed", false)) { DashLoad.ciLog = true; CenterSeed.run() }
         ciReminderTest()
         ciPhotos()
         val section = intent.getStringExtra(EXTRA_SECTION)

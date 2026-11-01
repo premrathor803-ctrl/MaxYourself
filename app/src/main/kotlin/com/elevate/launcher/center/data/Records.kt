@@ -6,6 +6,11 @@ import android.content.ContentValues
 class Measure(val id: Long, val kind: String, var value: Double, var day: String, var note: String)
 
 object MeasureRepo {
+    fun count(kind: String): Int {
+        val c = Center.db.rawQuery("SELECT COUNT(*) FROM measures WHERE kind=?", arrayOf(kind))
+        return c.use { if (it.moveToFirst()) it.getInt(0) else 0 }
+    }
+
     fun list(kind: String): List<Measure> {
         val c = Center.db.rawQuery("SELECT id, kind, value, day, note FROM measures WHERE kind=? ORDER BY day, id", arrayOf(kind))
         val out = ArrayList<Measure>()
@@ -128,6 +133,11 @@ class SleepEntry(val day: String, var bed: String, var wake: String, var energy:
 }
 
 object SleepRepo {
+    fun count(): Int {
+        val c = Center.db.rawQuery("SELECT COUNT(*) FROM sleep", null)
+        return c.use { if (it.moveToFirst()) it.getInt(0) else 0 }
+    }
+
     fun recent(limit: Int): List<SleepEntry> {
         val c = Center.db.rawQuery("SELECT day, bed, wake, energy, note FROM sleep ORDER BY day DESC LIMIT $limit", null)
         val out = ArrayList<SleepEntry>()
